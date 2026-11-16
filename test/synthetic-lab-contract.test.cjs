@@ -17,3 +17,9 @@ test('real-user experiment attribution excludes browser actor metrics',()=>{
  a.equal(program.synthetic_lab.real_user_validation_required,true);
  a.equal(program.synthetic_lab.synthetic_personas,p.personas.length);
 });
+
+test('small-phone report wraps long titles and Big Five avoids percentile claims',()=>{
+ const css=fs.readFileSync('styles.css','utf8');
+ a.match(css,/\.report-summary b\{overflow-wrap:anywhere/);
+ a.match(app,/not population percentiles, clinical diagnoses/);
+});
