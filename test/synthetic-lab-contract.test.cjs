@@ -23,3 +23,8 @@ test('small-phone report wraps long titles and Big Five avoids percentile claims
  a.match(css,/\.report-summary b\{overflow-wrap:anywhere/);
  a.match(app,/not population percentiles, clinical diagnoses/);
 });
+
+test('Together has an explicit fictional preview without invented community activity',()=>{
+ a.match(app,/function demoTogether\(\)/);a.match(app,/Alex is a fictional example/);
+ a.match(app,/state.demoMode/);a.match(app,/data-action="demo-together"/);
+});
