@@ -38,6 +38,10 @@ async function initialize(){
  CREATE TABLE IF NOT EXISTS mirra_feedback(id text PRIMARY KEY,area text NOT NULL,message text NOT NULL,created_at timestamptz DEFAULT now());
  CREATE TABLE IF NOT EXISTS mirra_first_circle(email text PRIMARY KEY,interest text NOT NULL,source text NOT NULL,consent_at timestamptz NOT NULL DEFAULT now());
  CREATE TABLE IF NOT EXISTS mirra_billing_subscriptions(subscription_id text PRIMARY KEY,user_id text NOT NULL REFERENCES mirra_users(id) ON DELETE CASCADE,product text NOT NULL,status text NOT NULL,created_at timestamptz DEFAULT now());
+ CREATE TABLE IF NOT EXISTS mirra_quiz_progress(visitor text NOT NULL,journey text NOT NULL,day date NOT NULL DEFAULT CURRENT_DATE,source text NOT NULL,max_answered integer NOT NULL DEFAULT 0,total_questions integer NOT NULL,completed boolean NOT NULL DEFAULT false,updated_at timestamptz DEFAULT now(),PRIMARY KEY(visitor,journey,day));
+ ALTER TABLE mirra_feedback ADD COLUMN IF NOT EXISTS rating smallint;
+ ALTER TABLE mirra_feedback ADD COLUMN IF NOT EXISTS journey text;
+ ALTER TABLE mirra_feedback ADD COLUMN IF NOT EXISTS would_return boolean;
  `);
 }
 async function findUser(req){if(!pool)return null;const tok=cookie(req);if(!tok)return null;const q=await pool.query('SELECT u.id,u.email,u.display_name,u.created_at FROM mirra_sessions s JOIN mirra_users u ON s.user_id=u.id WHERE s.token_hash=$1 AND s.expires_at>now()',[sha(tok)]);return q.rows[0]||null}
@@ -109,6 +113,24 @@ async function api(req,res,url){const p=url.pathname,m=req.method;
   await pool.query('INSERT INTO mirra_funnel_events(id,visitor,kind,journey,source) VALUES($1,$2,$3,$4,$5) ON CONFLICT(visitor,kind,journey,day) DO NOTHING',[crypto.randomUUID(),visitor,kind,journey,source]);
   return send(res,202,{accepted:true});
  }
+ // Question-level completion measurement without recording answers, names or emails.
+ if(m==='POST'&&p==='/api/quiz-progress'){
+  if(process.env.MIRRA_SYNTHETIC_LAB==='1')return send(res,202,{accepted:false,synthetic:true});
+  const d=await parseBody(req),visitor=clean(d.visitor,40),journey=clean(d.journey,40),source=clean(d.source,40);
+  const total=Number(d.total),answered=Number(d.answered),completed=d.completed===true;
+  if(!/^[a-f0-9-]{36}$/.test(visitor)||!(/^[a-z0-9_]{1,40}$/i.test(journey))||!(/^[a-z0-9_-]{0,40}$/i.test(source))||!Number.isInteger(total)||total<8||total>60||!Number.isInteger(answered)||answered<0||answered>total||(completed&&answered!==total))return bad(res,400,'Invalid progress signal.');
+  await pool.query("DELETE FROM mirra_quiz_progress WHERE day < CURRENT_DATE - interval '30 days'").catch(()=>{});
+  await pool.query("INSERT INTO mirra_quiz_progress(visitor,journey,source,max_answered,total_questions,completed) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(visitor,journey,day) DO UPDATE SET max_answered=GREATEST(mirra_quiz_progress.max_answered,excluded.max_answered),total_questions=excluded.total_questions,completed=(mirra_quiz_progress.completed OR excluded.completed),updated_at=now()",[visitor,journey,source,answered,total,completed]);
+  return send(res,202,{accepted:true});
+ }
+ if(m==='GET'&&p==='/api/growth/progress'){
+  const [journeys,steps,feedback]=await Promise.all([
+   pool.query("SELECT journey,total_questions,count(*)::int AS observed_browser_days,count(*) FILTER(WHERE completed)::int AS completions,ROUND(AVG(max_answered)::numeric,1) AS mean_questions_answered, count(*) FILTER(WHERE max_answered=0)::int AS left_before_answer, count(*) FILTER(WHERE max_answered>0 AND NOT completed)::int AS incomplete FROM mirra_quiz_progress WHERE updated_at>=now()-interval '7 days' GROUP BY journey,total_questions ORDER BY observed_browser_days DESC LIMIT 24"),
+   pool.query("SELECT journey,step,count(*) FILTER(WHERE max_answered>=step)::int AS reached FROM mirra_quiz_progress p CROSS JOIN LATERAL generate_series(1,p.total_questions) AS g(step) WHERE p.updated_at>=now()-interval '7 days' GROUP BY journey,step ORDER BY journey,step"),
+   pool.query("SELECT journey,count(*)::int AS responses,ROUND(AVG(rating)::numeric,2) AS mean_rating,count(*) FILTER(WHERE would_return=true)::int AS would_return_yes FROM mirra_feedback WHERE rating IS NOT NULL AND created_at>=now()-interval '7 days' GROUP BY journey ORDER BY responses DESC LIMIT 24")
+  ]);
+  return send(res,200,{windowDays:7,synthetic:false,unit:'browser-journey-days; never assume unique people',raw_answers_collected:false,journeys:journeys.rows,steps:steps.rows,feedback:feedback.rows.map(x=>({...x,mean_rating:x.responses>=5?x.mean_rating:null,would_return_yes:x.responses>=5?x.would_return_yes:null}))});
+ }
  if(m==='GET'&&p==='/api/funnel/summary'){
   const [q,journeys,sources,feedback,firstCircle]=await Promise.all([
     pool.query("SELECT count(DISTINCT visitor)::int AS anonymous_browsers, count(DISTINCT visitor) FILTER (WHERE kind='quiz_started')::int AS started_browsers, count(DISTINCT visitor) FILTER (WHERE kind='quiz_first_answer')::int AS engaged_browsers, count(DISTINCT visitor) FILTER (WHERE kind='quiz_completed')::int AS completed_browsers, count(DISTINCT visitor) FILTER (WHERE kind='return_visit')::int AS returning_browsers, count(DISTINCT visitor) FILTER (WHERE kind='share_clicked')::int AS sharing_browsers FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days'"),
@@ -128,7 +150,9 @@ async function api(req,res,url){const p=url.pathname,m=req.method;
  if(m==='POST'&&p==='/api/feedback'){
   const d=await parseBody(req),message=clean(d.text,1000),area=clean(d.area,40);
   if(message.length<8||!['design','questions','relationships','daily','other'].includes(area))return bad(res,400,'Invalid feedback');
-  await pool.query('INSERT INTO mirra_feedback(id,area,message) VALUES($1,$2,$3)',[crypto.randomUUID(),area,message]);
+  const rating=d.rating===undefined||d.rating===null?null:Number(d.rating),journey=clean(d.journey,40)||'general';
+  if((rating!==null&&(!Number.isInteger(rating)||rating<1||rating>5))||!(/^[a-z0-9_]{1,40}$/i.test(journey))||(d.wouldReturn!==undefined&&typeof d.wouldReturn!=='boolean'))return bad(res,400,'Invalid feedback response');
+  await pool.query('INSERT INTO mirra_feedback(id,area,message,rating,journey,would_return) VALUES($1,$2,$3,$4,$5,$6)',[crypto.randomUUID(),area,message,rating,journey,d.wouldReturn??null]);
   return send(res,201,{received:true});
  }
  if(m==='POST'&&p==='/api/together-guest'){
