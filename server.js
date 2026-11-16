@@ -100,7 +100,7 @@ async function api(req,res,url){const p=url.pathname,m=req.method;
  if(!pool)return bad(res,503,'Account service is not configured.');
  // Anonymous, privacy-conscious product metrics: an app-generated random browser ID; no IP, email or answers are persisted.
  if(m==='POST'&&p==='/api/funnel'){
-  const d=await parseBody(req);const kinds=['landing_view','quiz_started','quiz_completed','invite_created','invite_completed','daily_completed','share_clicked','return_visit','story_started'];
+  const d=await parseBody(req);const kinds=['landing_view','quiz_started','quiz_first_answer','quiz_completed','invite_created','invite_completed','daily_completed','share_clicked','return_visit','story_started'];
   const visitor=clean(d.visitor,40),kind=clean(d.kind,40),journey=clean(d.journey,40),source=clean(d.source,40);
   if(!/^[a-f0-9-]{36}$/.test(visitor)||!kinds.includes(kind)||!(/^[a-z0-9_-]{1,40}$/i.test(journey))||!(/^[a-z0-9_-]{0,40}$/i.test(source)))return bad(res,400,'Invalid event');
   await pool.query("DELETE FROM mirra_funnel_events WHERE created_at < now()-interval '30 days'").catch(()=>{});
@@ -109,8 +109,8 @@ async function api(req,res,url){const p=url.pathname,m=req.method;
  }
  if(m==='GET'&&p==='/api/funnel/summary'){
   const [q,journeys,sources,feedback,firstCircle]=await Promise.all([
-    pool.query("SELECT count(DISTINCT visitor)::int AS anonymous_browsers, count(DISTINCT visitor) FILTER (WHERE kind='quiz_started')::int AS started_browsers, count(DISTINCT visitor) FILTER (WHERE kind='quiz_completed')::int AS completed_browsers, count(DISTINCT visitor) FILTER (WHERE kind='return_visit')::int AS returning_browsers, count(DISTINCT visitor) FILTER (WHERE kind='share_clicked')::int AS sharing_browsers FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days'"),
-    pool.query("SELECT journey,count(DISTINCT visitor) FILTER(WHERE kind='quiz_started')::int AS started,count(DISTINCT visitor) FILTER(WHERE kind='quiz_completed')::int AS completed FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days' AND kind IN ('quiz_started','quiz_completed') GROUP BY journey ORDER BY started DESC LIMIT 12"),
+    pool.query("SELECT count(DISTINCT visitor)::int AS anonymous_browsers, count(DISTINCT visitor) FILTER (WHERE kind='quiz_started')::int AS started_browsers, count(DISTINCT visitor) FILTER (WHERE kind='quiz_first_answer')::int AS engaged_browsers, count(DISTINCT visitor) FILTER (WHERE kind='quiz_completed')::int AS completed_browsers, count(DISTINCT visitor) FILTER (WHERE kind='return_visit')::int AS returning_browsers, count(DISTINCT visitor) FILTER (WHERE kind='share_clicked')::int AS sharing_browsers FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days'"),
+    pool.query("SELECT journey,count(DISTINCT visitor) FILTER(WHERE kind='quiz_started')::int AS started,count(DISTINCT visitor) FILTER(WHERE kind='quiz_first_answer')::int AS engaged,count(DISTINCT visitor) FILTER(WHERE kind='quiz_completed')::int AS completed FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days' AND kind IN ('quiz_started','quiz_first_answer','quiz_completed') GROUP BY journey ORDER BY started DESC LIMIT 12"),
     pool.query("SELECT source,count(DISTINCT visitor)::int AS browsers FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days' AND kind='landing_view' GROUP BY source ORDER BY browsers DESC LIMIT 12"),
     pool.query("SELECT area,count(*)::int AS submissions FROM mirra_feedback WHERE created_at>=now()-interval '7 days' GROUP BY area ORDER BY submissions DESC"),
     pool.query("SELECT count(*)::int AS opt_ins FROM mirra_first_circle")

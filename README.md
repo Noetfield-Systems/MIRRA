@@ -39,3 +39,7 @@ Privacy: browser-based guest experience, account-scoped database access, HTTPS-o
 MIRRA is free to explore without registration. A quick three-minute journey leads to a personal result; Together invitations also work as a guest. Daily Reflection, Community feedback and optional First Circle email opt-in support learning from early visitors before activating payment or paid email campaigns.
 
 Anonymous funnel metrics and feedback category counts are shown at `/growth.html`. Browser identifiers are not verified users; First Circle opt-ins are unverified email addresses, not account activations. Users may opt out of anonymous analytics. Guest invitations expire from public retrieval after 30 days. Payments and email sends are not prerequisites for the community-first launch.
+
+## Measurement note
+
+The growth dashboard distinguishes page-loading browser identifiers, quiz starts, **first answered question** (stronger human-engagement signal), completions, sharing clicks and explicit First Circle opt-ins. These are not verified unique people; do not interpret bot traffic as users. No quiz answers are included in anonymous events.
