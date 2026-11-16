@@ -1,0 +1,78 @@
+'use strict';
+const {test,before,after}=require('node:test');
+const assert=require('node:assert/strict');
+const {spawn}=require('node:child_process');
+const {randomUUID}=require('node:crypto');
+const db=process.env.MIRRA_TEST_DATABASE_URL;
+const port=39281;
+const origin='http://127.0.0.1:'+port;
+let child,log='';
+before(async()=>{
+ if(!db)return;
+ child=spawn(process.execPath,['server.js'],{env:{...process.env,DATABASE_URL:db,PORT:String(port),NODE_ENV:'test',OPENAI_API_KEY:'',DEEPSEEK_API_KEY:''},stdio:['ignore','pipe','pipe']});
+ child.stderr.on('data',d=>log+=d.toString());
+ child.stdout.on('data',d=>log+=d.toString());
+ for(let i=0;i<140;i++){
+  if(child.exitCode!==null)throw Error('MIRRA database-backed server failed: '+log.slice(-1400));
+  try{const res=await fetch(origin+'/api/health');if(res.ok){const data=await res.json();if(data.database)return}}catch{}
+  await new Promise(r=>setTimeout(r,100));
+ }
+ throw Error('MIRRA database-backed server never became ready: '+log.slice(-1500));
+});
+after(()=>{if(child)child.kill('SIGTERM')});
+test('real registration, persistence, invitation, comparison, export, and deletion', {skip:!db},async()=>{
+ let session='';
+ const call=async(path,method='GET',json,authenticated=true)=>{
+  const headers={};if(json!==undefined)headers['content-type']='application/json';
+  if(authenticated&&session)headers.cookie=session;
+  const res=await fetch(origin+path,{method,headers,body:json===undefined?undefined:JSON.stringify(json)});
+  const body=await res.json();
+  return {status:res.status,body,cookie:res.headers.get('set-cookie')};
+ };
+ const noauth=await call('/api/reports','GET',undefined,false);
+ assert.equal(noauth.status,401);
+ const email='mirra-integration-'+randomUUID()+'@example.test';
+ const reg=await call('/api/register','POST',{email,password:'integration-pass-very-strong-27',name:'MIRRA Integration',adult:true});
+ assert.equal(reg.status,200,JSON.stringify(reg.body));
+ assert.ok(reg.body.user.id);
+ assert.ok(reg.cookie?.includes('HttpOnly'));
+ session=reg.cookie.split(';')[0];
+ const me=await call('/api/me');
+ assert.equal(me.body.user.email,email);
+ const sample=await call('/api/reports','POST',{journey:'ipip50',answers:Array(50).fill(3)});
+ assert.equal(sample.status,201,JSON.stringify(sample.body));
+ assert.equal(sample.body.score.dimensions.length,5);
+ const reports=await call('/api/reports');
+ assert.equal(reports.status,200);
+ assert.ok(reports.body.reports.some(r=>r.journey==='ipip50'));
+ const journal=await call('/api/journal','POST',{text:'I want to make room for meaningful conversations.'});
+ assert.equal(journal.status,201,JSON.stringify(journal.body));
+ const readJournal=await call('/api/journal');
+ assert.ok(readJournal.body.entries.some(x=>x.body.includes('meaningful conversations')));
+ const invite=await call('/api/invites','POST',{answers:[1,2,3,4,1,2,3,4]});
+ assert.equal(invite.status,201,JSON.stringify(invite.body));
+ assert.match(invite.body.url,/invite=/);
+ const code=new URL(invite.body.url).searchParams.get('invite');
+ assert.ok(code);
+ const guestView=await call('/api/together/'+code,'GET',undefined,false);
+ assert.equal(guestView.status,200);
+ assert.equal(guestView.body.invite.complete,false);
+ const responded=await call('/api/together/'+code+'/answer','POST',{name:'Guest Partner',answers:[1,2,4,4,1,3,3,2]},false);
+ assert.equal(responded.status,200,JSON.stringify(responded.body));
+ const result=await call('/api/together/'+code,'GET',undefined,false);
+ assert.equal(result.status,200);
+ assert.equal(result.body.invite.complete,true);
+ assert.equal(result.body.invite.comparison.total,8);
+ assert.equal(result.body.invite.comparison.sharedChoices,5);
+ const guided=await call('/api/mirror','POST',{message:'I want to understand my choices'});
+ assert.equal(guided.status,200);
+ assert.equal(guided.body.mode,'guided');
+ const exported=await call('/api/export');
+ assert.equal(exported.status,200);
+ assert.equal(exported.body.reports.length,1);
+ assert.equal(exported.body.journal.length,1);
+ const deleted=await call('/api/account','DELETE',{});
+ assert.equal(deleted.status,200);
+ const afterDelete=await call('/api/me','GET');
+ assert.equal(afterDelete.body.user,null);
+});
