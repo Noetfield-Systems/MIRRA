@@ -5,7 +5,7 @@
   "description": "MIRRA psychology and self-discovery experience",
   "scripts": {
     "start": "node server.js",
-    "test": "node --check enhancements.js && node --check server.js"
+    "test": "node --check enhancements.js && node --check server.js && node --test test/smoke.test.cjs"
   },
   "engines": {
     "node": ">=20"
