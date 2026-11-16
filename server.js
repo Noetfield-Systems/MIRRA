@@ -33,6 +33,9 @@ async function initialize(){
  CREATE TABLE IF NOT EXISTS mirra_entitlements(user_id text NOT NULL REFERENCES mirra_users(id) ON DELETE CASCADE,product text NOT NULL,source text NOT NULL,created_at timestamptz DEFAULT now(),PRIMARY KEY(user_id,product));
  CREATE TABLE IF NOT EXISTS mirra_events(id text PRIMARY KEY,kind text NOT NULL,created_at timestamptz DEFAULT now());
  CREATE TABLE IF NOT EXISTS mirra_stripe_events(id text PRIMARY KEY,created_at timestamptz DEFAULT now());
+ CREATE TABLE IF NOT EXISTS mirra_guest_invites(id text PRIMARY KEY,creator_name text NOT NULL,creator_answers jsonb NOT NULL,guest_name text,guest_answers jsonb,created_at timestamptz DEFAULT now());
+ CREATE TABLE IF NOT EXISTS mirra_funnel_events(id text PRIMARY KEY,visitor text NOT NULL,kind text NOT NULL,journey text NOT NULL,source text NOT NULL,day date NOT NULL DEFAULT CURRENT_DATE,created_at timestamptz DEFAULT now(),UNIQUE(visitor,kind,journey,day));
+ CREATE TABLE IF NOT EXISTS mirra_feedback(id text PRIMARY KEY,area text NOT NULL,message text NOT NULL,created_at timestamptz DEFAULT now());
  CREATE TABLE IF NOT EXISTS mirra_billing_subscriptions(subscription_id text PRIMARY KEY,user_id text NOT NULL REFERENCES mirra_users(id) ON DELETE CASCADE,product text NOT NULL,status text NOT NULL,created_at timestamptz DEFAULT now());
  `);
 }
@@ -94,15 +97,47 @@ async function api(req,res,url){const p=url.pathname,m=req.method;
  if(m==='GET'&&p==='/api/health')return send(res,200,{ok:true,service:'MIRRA 2.0',database:Boolean(pool),ai:Boolean(process.env.OPENAI_API_KEY||process.env.DEEPSEEK_API_KEY)});
  if(m==='GET'&&p==='/api/config')return send(res,200,{accounts:Boolean(pool),ai:Boolean(process.env.OPENAI_API_KEY||process.env.DEEPSEEK_API_KEY),products:{deepDive:process.env.MIRRA_DEEP_DIVE_LINK||null,plus:process.env.MIRRA_PLUS_LINK||null,together:process.env.MIRRA_TOGETHER_LINK||null}});
  if(!pool)return bad(res,503,'Account service is not configured.');
+ // Anonymous, privacy-conscious product metrics: an app-generated random browser ID; no IP, email or answers are persisted.
+ if(m==='POST'&&p==='/api/funnel'){
+  const d=await parseBody(req);const kinds=['landing_view','quiz_started','quiz_completed','invite_created','invite_completed','daily_completed','share_clicked','return_visit','story_started'];
+  const visitor=clean(d.visitor,40),kind=clean(d.kind,40),journey=clean(d.journey,40),source=clean(d.source,40);
+  if(!/^[a-f0-9-]{36}$/.test(visitor)||!kinds.includes(kind)||!(/^[a-z0-9_-]{1,40}$/i.test(journey))||!(/^[a-z0-9_-]{0,40}$/i.test(source)))return bad(res,400,'Invalid event');
+  await pool.query('INSERT INTO mirra_funnel_events(id,visitor,kind,journey,source) VALUES($1,$2,$3,$4,$5) ON CONFLICT(visitor,kind,journey,day) DO NOTHING',[crypto.randomUUID(),visitor,kind,journey,source]);
+  return send(res,202,{accepted:true});
+ }
+ if(m==='GET'&&p==='/api/funnel/summary'){
+  const [q,journeys,sources]=await Promise.all([
+    pool.query("SELECT count(DISTINCT visitor)::int AS anonymous_browsers, count(DISTINCT visitor) FILTER (WHERE kind='quiz_started')::int AS started_browsers, count(DISTINCT visitor) FILTER (WHERE kind='quiz_completed')::int AS completed_browsers, count(DISTINCT visitor) FILTER (WHERE kind='return_visit')::int AS returning_browsers, count(DISTINCT visitor) FILTER (WHERE kind='share_clicked')::int AS sharing_browsers FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days'"),
+    pool.query("SELECT journey,count(DISTINCT visitor) FILTER(WHERE kind='quiz_started')::int AS started,count(DISTINCT visitor) FILTER(WHERE kind='quiz_completed')::int AS completed FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days' AND kind IN ('quiz_started','quiz_completed') GROUP BY journey ORDER BY started DESC LIMIT 12"),
+    pool.query("SELECT source,count(DISTINCT visitor)::int AS browsers FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days' AND kind='landing_view' GROUP BY source ORDER BY browsers DESC LIMIT 12")
+  ]);
+  return send(res,200,{windowDays:7,unit:'anonymous browser identifiers, not verified people',...q.rows[0],journeys:journeys.rows,sources:sources.rows});
+ }
+ if(m==='POST'&&p==='/api/feedback'){
+  const d=await parseBody(req),message=clean(d.text,1000),area=clean(d.area,40);
+  if(message.length<8||!['design','questions','relationships','daily','other'].includes(area))return bad(res,400,'Invalid feedback');
+  await pool.query('INSERT INTO mirra_feedback(id,area,message) VALUES($1,$2,$3)',[crypto.randomUUID(),area,message]);
+  return send(res,201,{received:true});
+ }
+ if(m==='POST'&&p==='/api/together-guest'){
+  const d=await parseBody(req),name=clean(d.name,50);
+  if(name.length<2||!accepted(d.answers,8,4))return bad(res,400,'Complete all eight questions and enter your first name.');
+  const id=random(24);await pool.query('INSERT INTO mirra_guest_invites(id,creator_name,creator_answers) VALUES($1,$2,$3)',[id,name,JSON.stringify(d.answers)]);
+  await logEvent('guest_invite_created');const origin=process.env.PUBLIC_ORIGIN||('https://'+req.headers.host);
+  return send(res,201,{id,url:origin+'/?invite='+id});
+ }
+
  if(p==='/api/stripe/webhook'&&m==='POST')return stripeWebhook(req,res);
  if(m==='GET'&&p==='/api/me'){const u=await findUser(req);if(!u)return send(res,200,{user:null,entitlements:[]});const q=await pool.query('SELECT product FROM mirra_entitlements WHERE user_id=$1',[u.id]);return send(res,200,{user:safeUser(u),entitlements:q.rows.map(x=>x.product)})}
  if(m==='POST'&&p==='/api/register'){const data=await parseBody(req),email=clean(data.email,150).toLowerCase(),pass=String(data.password||''),name=clean(data.name,70);if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)||pass.length<10||pass.length>256||name.length<2||data.adult!==true)return bad(res,400,'Enter a valid email, a password of at least ten characters, your name, and confirm you are 18+.');const salt=random(16),id=crypto.randomUUID();try{await pool.query('INSERT INTO mirra_users(id,email,password_hash,display_name) VALUES($1,$2,$3,$4)',[id,email,salt+':'+passwordHash(pass,salt),name]);await logEvent('account_created');return signIn(res,{id,email,display_name:name})}catch(e){if(e.code==='23505')return bad(res,409,'This email already has an account.');throw e}}
  if(m==='POST'&&p==='/api/login'){const data=await parseBody(req),email=clean(data.email,150).toLowerCase(),pass=String(data.password||'');const q=await pool.query('SELECT * FROM mirra_users WHERE email=$1',[email]);const u=q.rows[0],parts=u?.password_hash?.split(':')||[];const actual=passwordHash(pass,parts[0]||'invalid-user'),expected=parts[1]||'0'.repeat(128);if(!u||actual.length!==expected.length||!crypto.timingSafeEqual(Buffer.from(actual),Buffer.from(expected)))return bad(res,401,'Email or password is incorrect.');return signIn(res,u)}
  if(m==='POST'&&p==='/api/logout'){const tok=cookie(req);if(tok)await pool.query('DELETE FROM mirra_sessions WHERE token_hash=$1',[sha(tok)]);setSession(res,'',0);return send(res,200,{ok:true})}
  const found=p.match(/^\/api\/together\/([A-Za-z0-9_-]{20,60})$/);
- if(m==='GET'&&found){const q=await pool.query('SELECT id,creator_name,creator_answers,guest_name,guest_answers FROM mirra_invites WHERE id=$1',[found[1]]);const x=q.rows[0];if(!x)return bad(res,404,'Invitation not found');return send(res,200,{invite:{id:x.id,from:x.creator_name,complete:!!x.guest_answers,guestName:x.guest_name,comparison:x.guest_answers?comparison(x.creator_answers,x.guest_answers):null}})}
+ if(m==='GET'&&found){let q=await pool.query('SELECT id,creator_name,creator_answers,guest_name,guest_answers,created_at FROM mirra_invites WHERE id=$1',[found[1]]);if(!q.rowCount){q=await pool.query("SELECT id,creator_name,creator_answers,guest_name,guest_answers,created_at FROM mirra_guest_invites WHERE id=$1 AND created_at>now()-interval '30 days'",[found[1]])}const x=q.rows[0];if(!x)return bad(res,404,'Invitation not found or expired');return send(res,200,{invite:{id:x.id,from:x.creator_name,complete:!!x.guest_answers,guestName:x.guest_name,comparison:x.guest_answers?comparison(x.creator_answers,x.guest_answers):null}})}
  const answerRoute=p.match(/^\/api\/together\/([A-Za-z0-9_-]{20,60})\/answer$/);
- if(m==='POST'&&answerRoute){const d=await parseBody(req);if(!accepted(d.answers,8,4)||clean(d.name,60).length<2)return bad(res,400,'Complete every question and enter a name.');const q=await pool.query('UPDATE mirra_invites SET guest_name=$1,guest_answers=$2 WHERE id=$3 AND guest_answers IS NULL RETURNING id',[clean(d.name,60),JSON.stringify(d.answers),answerRoute[1]]);if(!q.rowCount)return bad(res,409,'Invitation already completed or not found.');await logEvent('together_completed');return send(res,200,{ok:true})}
+ if(m==='POST'&&answerRoute){const d=await parseBody(req);if(!accepted(d.answers,8,4)||clean(d.name,60).length<2)return bad(res,400,'Complete every question and enter a name.');let q=await pool.query('UPDATE mirra_invites SET guest_name=$1,guest_answers=$2 WHERE id=$3 AND guest_answers IS NULL RETURNING id',[clean(d.name,60),JSON.stringify(d.answers),answerRoute[1]]);
+ if(!q.rowCount){q=await pool.query("UPDATE mirra_guest_invites SET guest_name=$1,guest_answers=$2 WHERE id=$3 AND guest_answers IS NULL AND created_at>now()-interval '30 days' RETURNING id",[clean(d.name,60),JSON.stringify(d.answers),answerRoute[1]])}
+ if(!q.rowCount)return bad(res,409,'Invitation already completed or not found.');await logEvent('together_completed');return send(res,200,{ok:true})}
  const u=await findUser(req);
  if(!u)return bad(res,401,'Sign in to save your experience.');
  if(m==='GET'&&p==='/api/reports'){const q=await pool.query('SELECT id,journey,score,created_at FROM mirra_reports WHERE user_id=$1 ORDER BY created_at DESC LIMIT 50',[u.id]);return send(res,200,{reports:q.rows})}
@@ -118,6 +153,8 @@ async function api(req,res,url){const p=url.pathname,m=req.method;
  return bad(res,404,'Not found');
 }
 async function request(req,res){try{const url=new URL(req.url,'http://localhost');if(url.pathname.startsWith('/api/')){if(!rate(req))return bad(res,429,'Too many requests.');if(req.method!=='GET'&&req.method!=='HEAD'){const o=req.headers.origin;if(o&&new URL(o).host!==req.headers.host)return bad(res,403,'Cross-site request blocked.');if(url.pathname!=='/api/stripe/webhook'&&!String(req.headers['content-type']||'').includes('application/json'))return bad(res,415,'Use JSON.')}return await api(req,res,url)}
+ const sharePage=url.pathname.match(/^\/q\/([a-z0-9]+)\/?$/);const shareTitles={ipip50:'Discover your Big Five personality',relationships:'How do you connect with people?',emotions:'Make sense of your emotional world',decisions:'What guides your decisions?',boundaries:'What are your boundaries?',values:'What matters most to you?',social:'Discover your social rhythm',resilience:'How do you respond to change?',habits:'The shape of your days'};
+ if(sharePage&&shareTitles[sharePage[1]]){const title=shareTitles[sharePage[1]];const html=fs.readFileSync(path.join(root,'index.html'),'utf8').replace('MIRRA | The psychology of being human','MIRRA | '+title).replace('A more considered way to understand yourself and the people you love.','A thoughtful free reflection. No sign-up required to begin.');res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'});return res.end(html)}
  const p=url.pathname==='/'?'index.html':url.pathname==='/classic'?'classic.html':decodeURIComponent(url.pathname.slice(1));const file=path.resolve(root,p);if(!file.startsWith(root+path.sep))return bad(res,403,'Forbidden');fs.stat(file,(e,s)=>{if(e||!s.isFile()){res.writeHead(404);return res.end('Not found')}const ext=path.extname(file);res.writeHead(200,{'content-type':mime[ext]||'application/octet-stream','cache-control':ext==='.html'?'no-store':'public,max-age=600','x-content-type-options':'nosniff','referrer-policy':'strict-origin-when-cross-origin','x-frame-options':'DENY'});fs.createReadStream(file).pipe(res)});
  }catch(e){console.error('Request failed',e);if(!res.headersSent)bad(res,e instanceof SyntaxError?400:500,'Unable to complete request.')}}
 if(require.main===module)initialize().then(()=>http.createServer(request).listen(PORT,'0.0.0.0',()=>console.log('MIRRA 2.0 on port '+PORT))).catch(e=>{console.error('Database initialization failed:',e.message);process.exit(1)});
