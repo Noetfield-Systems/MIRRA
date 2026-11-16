@@ -1,0 +1,13 @@
+{
+  "name": "mirra-editorial",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MIRRA psychology and self-discovery experience",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --check enhancements.js && node --check server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
