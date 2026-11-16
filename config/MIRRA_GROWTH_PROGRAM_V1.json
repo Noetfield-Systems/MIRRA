@@ -1,0 +1,470 @@
+{
+  "schema": "mirra.human-connection-growth-program.v1",
+  "version": "2026-11-16.1",
+  "project": "MIRRA",
+  "product_repo": "Noetfield-Systems/MIRRA",
+  "founder_authority": "Noetfield-Systems/sina_founder_os",
+  "company_os": "Noetfield-Systems/noetfeld-os",
+  "agentos": "Noetfield-Systems/AgentOS",
+  "existing_runtime": "Noetfield-Systems/NOETFIELD-RUNWAY",
+  "distribution": "Noetfield-Systems/Launch-Factory-Engine",
+  "crm": "Noetfield-Systems/Fieldwork",
+  "verifier": "existing Independent Verifier",
+  "canonical_workflow": "Noetfield-Systems/Launch-Factory-Engine/.github/workflows/continuous-launch-autopilot.yml",
+  "mission_id": "M22-MIRRA-CONNECTION",
+  "portfolio_boundary": "Noetfield product/asset until proven separate legal entity",
+  "source_of_truth": {
+    "roadmap": "docs/MIRRA_HUMAN_CONNECTION_BLUEPRINT_V1.md",
+    "program": "config/MIRRA_GROWTH_PROGRAM_V1.json",
+    "web_app": "https://mirra-psychology-web-production.up.railway.app",
+    "growth_summary": "https://mirra-psychology-web-production.up.railway.app/api/funnel/summary",
+    "source_tests": "npm test",
+    "founder_goal": "portfolio/STRATEGIC-EXECUTION-MISSIONS-v1.json"
+  },
+  "north_star": "Real people completing a meaningful first reflection, inviting someone voluntarily and returning for another useful experience",
+  "targets": {
+    "verified_volunteer_users": [
+      5,
+      10,
+      50,
+      100,
+      1000
+    ],
+    "first_answer_rate_hypothesis": 0.5,
+    "completed_rate_hypothesis": 0.6,
+    "d7_retention_hypothesis": 0.15,
+    "share_rate_hypothesis": 0.1
+  },
+  "metrics_units": {
+    "anonymous_browsers": "unverified browser identifiers",
+    "engaged_browsers": "browser identifiers that submitted first quiz answer",
+    "completed_browsers": "browser identifiers completing quiz",
+    "first_circle_optins": "unverified email consent records",
+    "verified_volunteers": "people with source-backed voluntary feedback or confirmed real participation",
+    "actual_users": "never infer from HTTP requests or bot traffic"
+  },
+  "current_real_users_verified": null,
+  "actual_paid_users_verified": null,
+  "monetization_priority": "NONE_UNTIL_REAL_USER_RETENTION",
+  "current_phase": "FIRST_5_REAL_VOLUNTEERS",
+  "principle": "Free meaningful first value before account, no payment and no wallet",
+  "distribution_policy": {
+    "outbound_email": "operations@noetfield.com until MIRRA alias is actually configured",
+    "future_alias": "mirra@noetfield.com proposal only",
+    "contact_discovery": "Fieldwork only, permissioned and deduplicated",
+    "do_not_send_without_basis": true,
+    "never_move_raw_psychological_answers_into_CRM": true,
+    "consent": "explicit per MIRRA project, do not reuse cross-venture"
+  },
+  "safety_and_truth": {
+    "diagnosis": false,
+    "psychometrics": "IPIP scoring separate from exploratory quizzes",
+    "preserve_answers_privacy": true,
+    "independent_evidence_required": true,
+    "no_fake_traffic": true,
+    "no_new_os": true,
+    "no_new_scheduler": true,
+    "no_duplicate_crm": true,
+    "no_new_company_tenant": true,
+    "direct_nonfinancial_internal_code_execution": true,
+    "policy_bounded_external_effects": true
+  },
+  "program_stages": [
+    "SOURCE_AUDIT",
+    "RANK_ACTIVATION_GAPS",
+    "COMPILE_BOUNDED_WORKPACKET_CANDIDATE",
+    "ROUTE_TO_EXISTING_COMPANY_OS",
+    "NATIVE_AGENT_EXECUTE_WHEN_CONNECTED",
+    "INDEPENDENT_VERIFIER_READBACK",
+    "REASSESS_NEXT_TICK"
+  ],
+  "cadence": {
+    "observer": "existing Launch Factory 30 minute GitHub workflow",
+    "goal": "keep source grounded next action populated on each cycle",
+    "fact": "scheduled observer is not proof of AI code worker commissioning"
+  },
+  "roles": [
+    {
+      "id": "MIRRA-RESEARCH",
+      "name": "Competitor & Audience Intelligence",
+      "system": "SourceA / existing research model via Company OS",
+      "scope": "Recheck competitor product evidence, public community pain points, differentiation and licensing. Rank hypotheses; avoid scraped PII."
+    },
+    {
+      "id": "MIRRA-PSYCH",
+      "name": "Psychometrics & Content Quality",
+      "system": "Company OS specialist worker",
+      "scope": "Audit IPIP scoring, source attribution, nonclinical wording, cultural readability and scenario quality. No diagnosis, no invented validity."
+    },
+    {
+      "id": "MIRRA-DESIGN",
+      "name": "Editorial Product and Accessibility",
+      "system": "Existing project engineering worker via Runway",
+      "scope": "Ship human-centered visual improvements to MIRRA, inspect 390 and 1440 layouts, verify all result and quiz states with screenshot readback."
+    },
+    {
+      "id": "MIRRA-GROWTH",
+      "name": "Acquisition and Retention",
+      "system": "Factory growth cycle + Fieldwork qualified distribution",
+      "scope": "Find qualified creator/community partners, analyze first answer, completion, return and invitations. No unconsented sends."
+    },
+    {
+      "id": "MIRRA-CONNECTION",
+      "name": "Together and Circles Product",
+      "system": "Company OS product worker",
+      "scope": "Improve two-person journeys, private sharing, invitation referrals, consent and future interest based circles without public sensitive profiling."
+    },
+    {
+      "id": "MIRRA-VERIFIER",
+      "name": "Independent Release and Outcome Readback",
+      "system": "Existing Independent Verifier",
+      "scope": "Validate source PR/commit/CI/deploy and evidence of actual voluntary participants; separate source events, browsers and verified users."
+    }
+  ],
+  "benchmarks": [
+    {
+      "id": "dimensional",
+      "name": "Dimensional",
+      "primary_url": "https://about.dimensional.me/",
+      "pattern": "deep_personality_social_comparison",
+      "observed_public_product_claim": "Deep multidimensional profile and friends comparison",
+      "mirra_experiment": "Profile retains detail and makes another person's perspective useful",
+      "last_verified_date": null,
+      "source_status": "SOURCE_LINK_RECORDED_NOT_INDEPENDENTLY_RECHECKED_THIS_CYCLE",
+      "copy_assets": false
+    },
+    {
+      "id": "boo",
+      "name": "Boo",
+      "primary_url": "https://boo.world/",
+      "pattern": "personality_interest_friendship",
+      "observed_public_product_claim": "Identity and interest driven discovery, opt in community",
+      "mirra_experiment": "Connect on shared curiosity, not simplistic compatibility verdict",
+      "last_verified_date": null,
+      "source_status": "SOURCE_LINK_RECORDED_NOT_INDEPENDENTLY_RECHECKED_THIS_CYCLE",
+      "copy_assets": false
+    },
+    {
+      "id": "paired",
+      "name": "Paired",
+      "primary_url": "https://www.paired.com/",
+      "pattern": "daily_two_person_retention",
+      "observed_public_product_claim": "Daily conversation, question packs, two-person interaction",
+      "mirra_experiment": "Joint answer reveal and meaningful recurring prompts",
+      "last_verified_date": null,
+      "source_status": "SOURCE_LINK_RECORDED_NOT_INDEPENDENTLY_RECHECKED_THIS_CYCLE",
+      "copy_assets": false
+    },
+    {
+      "id": "partiful",
+      "name": "Partiful",
+      "primary_url": "https://partiful.com/",
+      "pattern": "no_install_invite",
+      "observed_public_product_claim": "One-link invitation without required app installation",
+      "mirra_experiment": "Invite a guest who can participate before creating an account",
+      "last_verified_date": null,
+      "source_status": "SOURCE_LINK_RECORDED_NOT_INDEPENDENTLY_RECHECKED_THIS_CYCLE",
+      "copy_assets": false
+    },
+    {
+      "id": "how_we_feel",
+      "name": "How We Feel",
+      "primary_url": "https://apps.apple.com/us/app/how-we-feel/id1562706384",
+      "pattern": "emotional_language_journal",
+      "observed_public_product_claim": "Accessible emotional vocabulary, small reflective moments",
+      "mirra_experiment": "A useful emotion check in that does not diagnose",
+      "last_verified_date": null,
+      "source_status": "SOURCE_LINK_RECORDED_NOT_INDEPENDENTLY_RECHECKED_THIS_CYCLE",
+      "copy_assets": false
+    },
+    {
+      "id": "finch",
+      "name": "Finch",
+      "primary_url": "https://finchcare.com/about-finch",
+      "pattern": "gentle_retention",
+      "observed_public_product_claim": "Gentle habit loops and encouragement",
+      "mirra_experiment": "Pleasant repeat participation without guilt or fake streak pressure",
+      "last_verified_date": null,
+      "source_status": "SOURCE_LINK_RECORDED_NOT_INDEPENDENTLY_RECHECKED_THIS_CYCLE",
+      "copy_assets": false
+    },
+    {
+      "id": "16personalities",
+      "name": "16Personalities",
+      "primary_url": "https://www.16personalities.com/",
+      "pattern": "shareable_narrative",
+      "observed_public_product_claim": "Readable result narratives with personal relevance",
+      "mirra_experiment": "Editorial story quality while distinguishing science from entertainment",
+      "last_verified_date": null,
+      "source_status": "SOURCE_LINK_RECORDED_NOT_INDEPENDENTLY_RECHECKED_THIS_CYCLE",
+      "copy_assets": false
+    },
+    {
+      "id": "ipip",
+      "name": "International Personality Item Pool",
+      "primary_url": "https://ipip.ori.org/",
+      "pattern": "scientific_measurement",
+      "observed_public_product_claim": "Public domain factor markers and scoring information",
+      "mirra_experiment": "Explain item scoring and limits, not clinical authority",
+      "last_verified_date": null,
+      "source_status": "SOURCE_LINK_RECORDED_NOT_INDEPENDENTLY_RECHECKED_THIS_CYCLE",
+      "copy_assets": false
+    }
+  ],
+  "workstreams": [
+    {
+      "id": "F01",
+      "title": "First answer conversion",
+      "priority": 100,
+      "owner": "MIRRA-GROWTH",
+      "area": "activation",
+      "action": "Track landing→first answer by source and reduce friction",
+      "metric": "first_answer_rate",
+      "acceptance": "At least 5 distinct opted-in adult volunteers answer Q1 and 3 complete; de-duplicate source evidence; never use bot visits as users",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F02",
+      "title": "MIRRA Together v2",
+      "priority": 99,
+      "owner": "MIRRA-CONNECTION",
+      "area": "connection",
+      "action": "Joint answer reveal, richer conversation cards and guest invitations",
+      "metric": "invite_completions",
+      "acceptance": "Two real pairs complete both sides voluntarily; privacy and expired link behavior tested",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F03",
+      "title": "Editorial visual QA",
+      "priority": 98,
+      "owner": "MIRRA-DESIGN",
+      "area": "quality",
+      "action": "Create cohesive 2027 style, authentic portraits, premium typography and mobile first interactions",
+      "metric": "mobile_qa",
+      "acceptance": "Real screenshots at 390 and 1440, below fold, no overflow; accessible keyboard/focus and source assets license checked",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F04",
+      "title": "Psychology scoring review",
+      "priority": 97,
+      "owner": "MIRRA-PSYCH",
+      "area": "accuracy",
+      "action": "Verify IPIP item keys and score descriptions against original sources",
+      "metric": "scoring_tests",
+      "acceptance": "50 items scoring and reverse keys tested; original exploratory quizzes clearly labeled and nonclinical",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F05",
+      "title": "First circle recruiting",
+      "priority": 96,
+      "owner": "MIRRA-GROWTH",
+      "area": "acquisition",
+      "action": "Research qualified volunteer testers and micro creators; write personalized relevant invitations",
+      "metric": "verified_testers",
+      "acceptance": "Five real voluntary feedback participants evidenced by actual submission/reply; no bulk cold outreach",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F06",
+      "title": "Signature portrait 2.0",
+      "priority": 94,
+      "owner": "MIRRA-DESIGN",
+      "area": "sharing",
+      "action": "Printable social share visuals with participant chosen artwork and meaningful copy",
+      "metric": "result_share",
+      "acceptance": "Cross device screenshots, no third party image hotlink failures, shared link resolves at source",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F07",
+      "title": "Daily curiosity rotation",
+      "priority": 93,
+      "owner": "MIRRA-CONNECTION",
+      "area": "retention",
+      "action": "Meaningful rotating prompts and history without punitive streaks",
+      "metric": "d7_return",
+      "acceptance": "At least 2 real testers choose to return and complete second reflection",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F08",
+      "title": "Audience segment intelligence",
+      "priority": 92,
+      "owner": "MIRRA-RESEARCH",
+      "area": "audience",
+      "action": "Track relevant opt in communities, psychology creators, couples educators and young professionals",
+      "metric": "qualified_partners",
+      "acceptance": "Source URLs with date/persona/offer fit, not harvested addresses or fictional collaborations",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F09",
+      "title": "Interactive conversation stories",
+      "priority": 90,
+      "owner": "MIRRA-CONNECTION",
+      "area": "depth",
+      "action": "Add branching scenarios for friendship and values with traceable results",
+      "metric": "story_completion",
+      "acceptance": "No dead end, readable choices, mobile finish path and real tester feedback",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F10",
+      "title": "Content quality editorial audit",
+      "priority": 89,
+      "owner": "MIRRA-PSYCH",
+      "area": "accuracy",
+      "action": "Revise repetitive scenarios and ungrounded profile claims",
+      "metric": "content_review",
+      "acceptance": "Peer review of all user facing claims and 2 distinct test sessions",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F11",
+      "title": "Return and share metric integrity",
+      "priority": 88,
+      "owner": "MIRRA-GROWTH",
+      "area": "measurement",
+      "action": "Exclude synthetic QA from acquisition; read actual daily funnel distinct browser vs people",
+      "metric": "source_integrity",
+      "acceptance": "Document exactly provider verified visits, answer events, returns, invited pairs, consent basis",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F12",
+      "title": "Social circles design pilot",
+      "priority": 85,
+      "owner": "MIRRA-CONNECTION",
+      "area": "community",
+      "action": "Small opt in interest circles, group questions, reporting and private by default",
+      "metric": "circle_interactions",
+      "acceptance": "Pilot with real participants; opt in, report and block behavior tested before public profiles",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F13",
+      "title": "Mobile microinteractions",
+      "priority": 83,
+      "owner": "MIRRA-DESIGN",
+      "area": "quality",
+      "action": "Tactile answer states, responsive choice transitions and useful loading states",
+      "metric": "a11y",
+      "acceptance": "Reduced motion, 44px touch targets, 390/1440 test no regressions",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F14",
+      "title": "Personality profile continuity",
+      "priority": 81,
+      "owner": "MIRRA-CONNECTION",
+      "area": "identity",
+      "action": "Explain growth across repeated assessments and journal when user chooses save",
+      "metric": "profile_readback",
+      "acceptance": "Cloud profile readback only for authenticated user; proper export/delete verified",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F15",
+      "title": "Public first-use SEO",
+      "priority": 80,
+      "owner": "MIRRA-GROWTH",
+      "area": "acquisition",
+      "action": "Original short experience pages, personalized share previews, sitemap and indexability",
+      "metric": "search_source",
+      "acceptance": "HTML OG metadata and accessible full experience at shared link; unique original editorial copy",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F16",
+      "title": "First 100 cohort learning",
+      "priority": 78,
+      "owner": "MIRRA-RESEARCH",
+      "area": "learning",
+      "action": "Synthesize actual onboarding and feedback themes to prioritize next experiment",
+      "metric": "cohort_report",
+      "acceptance": "Backed by sourced consented feedback; classify assumptions separately from confirmed outcomes",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    }
+  ],
+  "research_segments": [
+    {
+      "id": "psychology_and_wellbeing_creators",
+      "source": "public creator sites with voluntary business contact",
+      "offer": "3-minute emotions reflection"
+    },
+    {
+      "id": "couples_coaches_and_educators",
+      "source": "public creator/course pages",
+      "offer": "private couple question demo"
+    },
+    {
+      "id": "friendship_and_community_hosts",
+      "source": "public event and group pages",
+      "offer": "guest Together questions"
+    },
+    {
+      "id": "early_career_and_student_groups",
+      "source": "public group and program pages",
+      "offer": "personal decision patterns"
+    },
+    {
+      "id": "mental_wellbeing_communities",
+      "source": "public participation guidelines",
+      "offer": "nonclinical emotional vocabulary"
+    },
+    {
+      "id": "product_testers_and_designers",
+      "source": "opt in founder and tester communities",
+      "offer": "usability walkthrough"
+    }
+  ],
+  "loop_control": {
+    "on_no_visitors": "improve first value and source distribution with a single safe experiment",
+    "on_no_first_answer": "inspect share deep link, script, first screen and above fold CTA",
+    "on_low_completion": "audit question length, answer feedback, mobile rendering",
+    "on_no_share": "improve report usefulness and guest Together invitations",
+    "on_no_return": "test daily question relevance and follow up when consented"
+  },
+  "output_requirements": [
+    "source_ref",
+    "agent_owner_role",
+    "workstream_id",
+    "exact_action",
+    "acceptance",
+    "candidate_workpacket_id_or_null",
+    "actual_run_id_or_null",
+    "source_commit_or_null",
+    "independent_receipt_or_null",
+    "next_action",
+    "observed_real_people_or_null"
+  ],
+  "evidence_states": [
+    "DEFINED_NOT_DISPATCHED",
+    "CANDIDATE_READY",
+    "SOURCE_OBSERVED",
+    "DISPATCH_ACCEPTED_NOT_EXECUTED",
+    "NATIVE_RUN_EXECUTED",
+    "INDEPENDENTLY_VERIFIED",
+    "REAL_USER_ACTIVE"
+  ],
+  "scope_default": "Internal research/code/QA allowed; actual external outreach only on known lawful recipient and authorized channel; no paid ads, Stripe, public PII or irreversible actions."
+}

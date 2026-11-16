@@ -1,5 +1,7 @@
 # MIRRA 2.0
 
+**Canonical growth SSOT:** [MIRRA Human Connection Blueprint](docs/MIRRA_HUMAN_CONNECTION_BLUEPRINT_V1.md) · [Machine-readable autonomous program](config/MIRRA_GROWTH_PROGRAM_V1.json) · [Agent instructions](AGENTS.md). First objective: five real volunteers and retention; no new OS, no Stripe gate.
+
 ## Try MIRRA — free, no account required
 
 **[Start with a three-minute reflection](https://mirra-psychology-web-production.up.railway.app/q/emotions?utm_source=github_readme)** · [Explore relationships](https://mirra-psychology-web-production.up.railway.app/q/relationships?utm_source=github_readme) · [Visit the complete app](https://mirra-psychology-web-production.up.railway.app/?utm_source=github_readme)
