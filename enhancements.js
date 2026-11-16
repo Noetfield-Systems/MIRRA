@@ -157,6 +157,7 @@
   const order=['emotions','boundaries','values','social','resilience','habits'];
   order.forEach((k)=>{variants[k]=specs[k];if(!Array.isArray(data.answers[k]))data.answers[k]=[];});
   const oldHome=homeHTML;
+  const fallbackPortrait=document.querySelector('.hero-art img:nth-child(2)')?.src||'';
   const illustration=(src,alt)=>`<img loading="lazy" decoding="async" src="${src}" alt="${alt}" onerror="this.onerror=null;this.src='${document.querySelector('.hero-art img:nth-child(2)')?.src||''}'">`;
   homeHTML=function(){
     let html=oldHome();
@@ -171,7 +172,7 @@
   assessmentHTML=function(){
     let html=oldAssessment();
     if(mode==='personality')return html;
-    if(specs[mode])return html.replace('A CONVERSATION WITH YOURSELF',specs[mode].eyebrow).replace('assets/portrait.webp',specs[mode].image);
+    if(specs[mode])return html.replace(/(<aside class="q-visual"><img src=")[^"]+/, '$1'+specs[mode].image);
     return html;
   };
   const oldJournal=journalHTML;
