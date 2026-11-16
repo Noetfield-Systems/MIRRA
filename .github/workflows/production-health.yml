@@ -13,7 +13,7 @@ jobs:
           set -euo pipefail
           base="https://mirra-psychology-web-production.up.railway.app"
           ready=0
-          for n in $(seq 1 18); do
+          for n in $(seq 1 3); do
             if curl --max-time 12 --fail --silent --show-error "$base/api/health" -o /tmp/mirra-health.json &&
                curl --max-time 12 --fail --silent --show-error "$base/" -o /tmp/mirra-home.html &&
                curl --max-time 12 --fail --silent --show-error "$base/app.js" -o /tmp/mirra-app.js; then
@@ -25,6 +25,6 @@ jobs:
                 break
               fi
             fi
-            sleep 5
+            sleep 2
           done
           test "$ready" -eq 1
