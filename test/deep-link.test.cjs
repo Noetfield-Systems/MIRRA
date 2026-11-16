@@ -9,7 +9,7 @@ test('direct assessment routes load root-level scripts and stylesheet',()=>{
   assert.match(html,/src="\/app\.js"/);
   assert.doesNotMatch(html,/(?:href|src)="(?:styles\.css|app\.js)"/);
   assert.match(server,/sharePage/);
-  assert.match(server,/\/q\//);
+  assert.ok(server.includes('shareTitles'), 'quiz route titles are generated server-side');
 });
 test('app icon and social preview resolve from all routes',()=>{
   assert.match(html,/href="\/favicon\.svg"/);
