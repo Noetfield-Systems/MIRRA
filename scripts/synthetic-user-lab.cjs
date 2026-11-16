@@ -114,6 +114,22 @@ async function personaCase(browser,persona){
    info.guest_completed=true;
    await safeShot(other,persona.id,'two_person_comparison');
    await guest.close();
+  }else if(persona.id==='fictional_demo'){
+   await page.goto(BASE+'/?mirra_qa=1#together',{waitUntil:'domcontentloaded'});
+   await page.locator('[data-action="demo-together"]').first().click();
+   await waitQuestion(page,0);
+   for(let i=0;i<8;i++){
+    await waitQuestion(page,i);
+    await page.locator('[data-answer="'+(i%4+1)+'"]').first().click();
+   }
+   await page.locator('.demo-compare-grid').waitFor({timeout:12000});
+   const rows=await page.locator('.demo-row').count();
+   const content=await page.locator('#app').innerText();
+   if(rows!==8)add(persona.id,'P0','sample_preview','Expected eight sample comparisons, got '+rows,'Review preview renderer');
+   if(!/fictional example/i.test(content))add(persona.id,'P0','sample_label','Preview should be clearly marked as an example','Add visible demo label');
+   await before(page,persona.id);
+   await safeShot(page,persona.id,'sample_comparison');
+   info={sample_comparison_rows:rows,example_marked:/fictional example/i.test(content)};
   }else if(persona.id==='evidence_skeptic'){
    info=await quiz(page,persona,{route:'ipip50',questions:50,explicit:true,style:'balanced'});
    const dim=await page.locator('.report-dimension').count();
