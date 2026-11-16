@@ -33,3 +33,9 @@ Public-domain IPIP: https://ipip.ori.org/new_ipip-50-item-scale.htm
 Goldberg LR (1992), *Psychological Assessment*, 4(1), 26–42. The 0–100 indices are transformed scale scores, not population percentiles. The creative journeys are reflective and not psychometrically validated. Nothing in the app is a clinical diagnosis or therapy service.
 
 Privacy: browser-based guest experience, account-scoped database access, HTTPS-only secure session cookies in production, CSRF origin checks, export and deletion. Anyone with an invitation link can view a completed two-person comparison; never share the link publicly unless you want that audience.
+
+## Community-first launch (November 2026)
+
+MIRRA is free to explore without registration. A quick three-minute journey leads to a personal result; Together invitations also work as a guest. Daily Reflection, Community feedback and optional First Circle email opt-in support learning from early visitors before activating payment or paid email campaigns.
+
+Anonymous funnel metrics and feedback category counts are shown at `/growth.html`. Browser identifiers are not verified users; First Circle opt-ins are unverified email addresses, not account activations. Users may opt out of anonymous analytics. Guest invitations expire from public retrieval after 30 days. Payments and email sends are not prerequisites for the community-first launch.

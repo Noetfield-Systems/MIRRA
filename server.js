@@ -36,6 +36,7 @@ async function initialize(){
  CREATE TABLE IF NOT EXISTS mirra_guest_invites(id text PRIMARY KEY,creator_name text NOT NULL,creator_answers jsonb NOT NULL,guest_name text,guest_answers jsonb,created_at timestamptz DEFAULT now());
  CREATE TABLE IF NOT EXISTS mirra_funnel_events(id text PRIMARY KEY,visitor text NOT NULL,kind text NOT NULL,journey text NOT NULL,source text NOT NULL,day date NOT NULL DEFAULT CURRENT_DATE,created_at timestamptz DEFAULT now(),UNIQUE(visitor,kind,journey,day));
  CREATE TABLE IF NOT EXISTS mirra_feedback(id text PRIMARY KEY,area text NOT NULL,message text NOT NULL,created_at timestamptz DEFAULT now());
+ CREATE TABLE IF NOT EXISTS mirra_first_circle(email text PRIMARY KEY,interest text NOT NULL,source text NOT NULL,consent_at timestamptz NOT NULL DEFAULT now());
  CREATE TABLE IF NOT EXISTS mirra_billing_subscriptions(subscription_id text PRIMARY KEY,user_id text NOT NULL REFERENCES mirra_users(id) ON DELETE CASCADE,product text NOT NULL,status text NOT NULL,created_at timestamptz DEFAULT now());
  `);
 }
@@ -107,13 +108,20 @@ async function api(req,res,url){const p=url.pathname,m=req.method;
   return send(res,202,{accepted:true});
  }
  if(m==='GET'&&p==='/api/funnel/summary'){
-  const [q,journeys,sources,feedback]=await Promise.all([
+  const [q,journeys,sources,feedback,firstCircle]=await Promise.all([
     pool.query("SELECT count(DISTINCT visitor)::int AS anonymous_browsers, count(DISTINCT visitor) FILTER (WHERE kind='quiz_started')::int AS started_browsers, count(DISTINCT visitor) FILTER (WHERE kind='quiz_completed')::int AS completed_browsers, count(DISTINCT visitor) FILTER (WHERE kind='return_visit')::int AS returning_browsers, count(DISTINCT visitor) FILTER (WHERE kind='share_clicked')::int AS sharing_browsers FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days'"),
     pool.query("SELECT journey,count(DISTINCT visitor) FILTER(WHERE kind='quiz_started')::int AS started,count(DISTINCT visitor) FILTER(WHERE kind='quiz_completed')::int AS completed FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days' AND kind IN ('quiz_started','quiz_completed') GROUP BY journey ORDER BY started DESC LIMIT 12"),
     pool.query("SELECT source,count(DISTINCT visitor)::int AS browsers FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days' AND kind='landing_view' GROUP BY source ORDER BY browsers DESC LIMIT 12"),
-    pool.query("SELECT area,count(*)::int AS submissions FROM mirra_feedback WHERE created_at>=now()-interval '7 days' GROUP BY area ORDER BY submissions DESC")
+    pool.query("SELECT area,count(*)::int AS submissions FROM mirra_feedback WHERE created_at>=now()-interval '7 days' GROUP BY area ORDER BY submissions DESC"),
+    pool.query("SELECT count(*)::int AS opt_ins FROM mirra_first_circle")
   ]);
-  return send(res,200,{windowDays:7,unit:'anonymous browser identifiers, not verified people',...q.rows[0],journeys:journeys.rows,sources:sources.rows,feedbackAreas:feedback.rows});
+  return send(res,200,{windowDays:7,unit:'anonymous browser identifiers, not verified people',...q.rows[0],journeys:journeys.rows,sources:sources.rows,feedbackAreas:feedback.rows,firstCircleOptIns:firstCircle.rows[0]?.opt_ins||0});
+ }
+ if(m==='POST'&&p==='/api/first-circle'){
+  const d=await parseBody(req),email=clean(d.email,160).toLowerCase(),interest=clean(d.interest,40),source=clean(d.source,40);
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)||!['self','relationships','daily','curiosity'].includes(interest)||d.consent!==true||!(/^[a-z0-9_-]{0,40}$/i.test(source)))return bad(res,400,'Please provide a valid email and opt in explicitly.');
+  await pool.query('INSERT INTO mirra_first_circle(email,interest,source) VALUES($1,$2,$3) ON CONFLICT(email) DO UPDATE SET interest=excluded.interest,source=excluded.source,consent_at=now()',[email,interest,source]);
+  return send(res,201,{joined:true});
  }
  if(m==='POST'&&p==='/api/feedback'){
   const d=await parseBody(req),message=clean(d.text,1000),area=clean(d.area,40);
