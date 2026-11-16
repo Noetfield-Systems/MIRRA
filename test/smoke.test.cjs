@@ -18,7 +18,7 @@ before(async()=>{
 });
 after(()=>{if(child)child.kill('SIGTERM')});
 test('MIRRA 2 landing and modules are served',async()=>{
- let r=await fetch(base+'/');assert.equal(r.status,200);const html=await r.text();assert.match(html,/The psychology of being human/);assert.match(html,/app\\.js/);
+ let r=await fetch(base+'/');assert.equal(r.status,200);const html=await r.text();assert.match(html,/The psychology of being human/);assert.ok(html.includes('app.js'));
  r=await fetch(base+'/app.js');assert.equal(r.status,200);assert.match(await r.text(),/Personality/);
  r=await fetch(base+'/styles.css');assert.equal(r.status,200);
  r=await fetch(base+'/assets/portrait.webp');assert.equal(r.status,200);
