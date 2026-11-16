@@ -1,5 +1,11 @@
 # MIRRA 2.0
 
+## Try MIRRA — free, no account required
+
+**[Start with a three-minute reflection](https://mirra-psychology-web-production.up.railway.app/q/emotions?utm_source=github_readme)** · [Explore relationships](https://mirra-psychology-web-production.up.railway.app/q/relationships?utm_source=github_readme) · [Visit the complete app](https://mirra-psychology-web-production.up.railway.app/?utm_source=github_readme)
+
+**First Circle:** We are inviting the first five people to try one experience and give candid feedback about clarity, quality and whether they would return. [Read the invitation](https://github.com/Noetfield-Systems/MIRRA/issues/1) or choose **Community → Send feedback** in the app. No purchase, account or public personal disclosure is needed.
+
 Editorial psychology, relationship discovery, and thoughtful self-reflection.
 
 ## Features
