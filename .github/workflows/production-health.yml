@@ -1,0 +1,30 @@
+name: MIRRA production health
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify public website and database API
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://mirra-psychology-web-production.up.railway.app"
+          ready=0
+          for n in $(seq 1 18); do
+            if curl --max-time 12 --fail --silent --show-error "$base/api/health" -o /tmp/mirra-health.json &&
+               curl --max-time 12 --fail --silent --show-error "$base/" -o /tmp/mirra-home.html &&
+               curl --max-time 12 --fail --silent --show-error "$base/app.js" -o /tmp/mirra-app.js; then
+              if node -e "const fs=require('fs');let h=JSON.parse(fs.readFileSync('/tmp/mirra-health.json','utf8'));if(h.ok!==true||h.database!==true)process.exit(1);if(!fs.readFileSync('/tmp/mirra-home.html','utf8').includes('MIRRA'))process.exit(1);if(!fs.readFileSync('/tmp/mirra-app.js','utf8').includes('Big Five'))process.exit(1)"; then
+                echo "Production endpoints returned unexpected content, retrying"
+              else
+                echo "MIRRA production verified: website, JavaScript, API and connected database"
+                ready=1
+                break
+              fi
+            fi
+            sleep 5
+          done
+          test "$ready" -eq 1
