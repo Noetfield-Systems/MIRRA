@@ -17,7 +17,7 @@ jobs:
             if curl --max-time 12 --fail --silent --show-error "$base/api/health" -o /tmp/mirra-health.json &&
                curl --max-time 12 --fail --silent --show-error "$base/" -o /tmp/mirra-home.html &&
                curl --max-time 12 --fail --silent --show-error "$base/app.js" -o /tmp/mirra-app.js; then
-              if node -e "const fs=require('fs');let h=JSON.parse(fs.readFileSync('/tmp/mirra-health.json','utf8'));if(h.ok!==true||h.database!==true)process.exit(1);if(!fs.readFileSync('/tmp/mirra-home.html','utf8').includes('MIRRA'))process.exit(1);if(!fs.readFileSync('/tmp/mirra-app.js','utf8').includes('Big Five'))process.exit(1)"; then
+              if node -e "const fs=require('fs');let h=JSON.parse(fs.readFileSync('/tmp/mirra-health.json','utf8'));const home=fs.readFileSync('/tmp/mirra-home.html','utf8'),app=fs.readFileSync('/tmp/mirra-app.js','utf8');console.log('PROBE',JSON.stringify({health:h,htmlLength:home.length,scriptLength:app.length,hasBrand:home.includes('MIRRA'),hasBigFive:app.includes('Big Five')}));if(h.ok!==true||h.database!==true||!home.includes('MIRRA')||!app.includes('Big Five'))process.exit(1)"; then
                 echo "Production endpoints returned unexpected content, retrying"
               else
                 echo "MIRRA production verified: website, JavaScript, API and connected database"
