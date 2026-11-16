@@ -41,6 +41,7 @@ jobs:
         env:
           DATABASE_URL: postgres://mirra_test:mirra_test@127.0.0.1:5432/mirra_test
           MIRRA_SYNTHETIC_LAB: "1"
+          PUBLIC_ORIGIN: http://127.0.0.1:3000
           NODE_ENV: test
           PORT: "3000"
         run: |
