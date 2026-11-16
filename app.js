@@ -53,6 +53,8 @@ function saveDraft(){if(state.route==='quiz'&&state.journey)putLocal('draft',{jo
 function clearDraft(){try{localStorage.removeItem('mirra2:draft')}catch{}}
 function trackingId(){let id=getLocal('anonymousVisitor',null);if(typeof id!=='string'||!/^[a-f0-9-]{36}$/.test(id)){id=crypto.randomUUID();putLocal('anonymousVisitor',id)}return id}
 async function track(kind,journey='general'){
+ // Scripted QA is not a person. Exclude it from all product metrics.
+ if(navigator.webdriver===true||new URL(location.href).searchParams.has('mirra_qa'))return;
  if(navigator.doNotTrack==='1'||getLocal('analyticsOff',false)===true)return;
  if(!['landing_view','quiz_started','quiz_first_answer','quiz_completed','invite_created','invite_completed','daily_completed','share_clicked','return_visit','story_started'].includes(kind))return;
  try{await request('/api/funnel',{method:'POST',json:{visitor:trackingId(),kind,journey,source:state.source}})}catch{}

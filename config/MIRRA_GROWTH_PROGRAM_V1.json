@@ -466,5 +466,17 @@
     "INDEPENDENTLY_VERIFIED",
     "REAL_USER_ACTIVE"
   ],
-  "scope_default": "Internal research/code/QA allowed; actual external outreach only on known lawful recipient and authorized channel; no paid ads, Stripe, public PII or irreversible actions."
+  "scope_default": "Internal research/code/QA allowed; actual external outreach only on known lawful recipient and authorized channel; no paid ads, Stripe, public PII or irreversible actions.",
+  "synthetic_lab": {
+    "program": "config/SYNTHETIC_USER_LAB_V1.json",
+    "runner": "scripts/synthetic-user-lab.cjs",
+    "workflow": ".github/workflows/quality.yml",
+    "cadence": "every six hours within original MIRRA CI",
+    "purpose": "scripted human-like browser scenarios, issue discovery and source evidence",
+    "synthetic_personas": 8,
+    "public_user_count_contribution": 0,
+    "real_user_validation_required": true,
+    "company_os_handoff": "M22 source-backed workstreams, no new agent queue",
+    "agent_runtime_proof": "NO_NEW_CODING_AGENT_COMMISSIONED_BY_BROWSER_TEST"
+  }
 }
