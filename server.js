@@ -33,6 +33,7 @@ async function initialize(){
  CREATE TABLE IF NOT EXISTS mirra_entitlements(user_id text NOT NULL REFERENCES mirra_users(id) ON DELETE CASCADE,product text NOT NULL,source text NOT NULL,created_at timestamptz DEFAULT now(),PRIMARY KEY(user_id,product));
  CREATE TABLE IF NOT EXISTS mirra_events(id text PRIMARY KEY,kind text NOT NULL,created_at timestamptz DEFAULT now());
  CREATE TABLE IF NOT EXISTS mirra_stripe_events(id text PRIMARY KEY,created_at timestamptz DEFAULT now());
+ CREATE TABLE IF NOT EXISTS mirra_billing_subscriptions(subscription_id text PRIMARY KEY,user_id text NOT NULL REFERENCES mirra_users(id) ON DELETE CASCADE,product text NOT NULL,status text NOT NULL,created_at timestamptz DEFAULT now());
  `);
 }
 async function findUser(req){if(!pool)return null;const tok=cookie(req);if(!tok)return null;const q=await pool.query('SELECT u.id,u.email,u.display_name,u.created_at FROM mirra_sessions s JOIN mirra_users u ON s.user_id=u.id WHERE s.token_hash=$1 AND s.expires_at>now()',[sha(tok)]);return q.rows[0]||null}
@@ -44,11 +45,50 @@ const styleLabels=['Clear conversation','A little space','Everyday warmth','Shar
 function comparison(a,b){const count=z=>Array.from({length:4},(_,i)=>z.filter(x=>x===i+1).length),left=count(a),right=count(b);return {sharedChoices:a.filter((v,i)=>v===b[i]).length,total:8,first:styleLabels[left.indexOf(Math.max(...left))],second:styleLabels[right.indexOf(Math.max(...right))],patterns:questionsTogether.map((question,i)=>({question,similar:a[i]===b[i]})),note:'An invitation to talk, not a compatibility score or a prediction about a relationship.'}}
 function promptGuide(message){const x=message.toLowerCase();let q='What feels most important to notice about this right now?';if(/partner|relationship|friend|love/.test(x))q='What do you wish the other person better understood about your experience?';else if(/work|choice|decision/.test(x))q='Which option feels closest to what you value, even if it is less familiar?';else if(/feel|worry|stress/.test(x))q='What might make today feel a little more manageable?';return {mode:'guided',answer:'One place to begin is with a specific moment rather than a fixed conclusion about yourself. '+q}}
 function verifyStripe(req,raw){const secret=process.env.STRIPE_WEBHOOK_SECRET;if(!secret)return false;const header=String(req.headers['stripe-signature']||'');const t=/t=(\d+)/.exec(header)?.[1];const sig=/v1=([a-f0-9]+)/.exec(header)?.[1];if(!t||!sig||Math.abs(Date.now()/1000-Number(t))>300)return false;const expected=crypto.createHmac('sha256',secret).update(t+'.'+raw.toString('utf8')).digest('hex');return sig.length===expected.length&&crypto.timingSafeEqual(Buffer.from(sig),Buffer.from(expected))}
-async function stripeWebhook(req,res){const parts=[];let size=0;for await(const b of req){size+=b.length;if(size>100000)return bad(res,413,'Too large');parts.push(b)}const raw=Buffer.concat(parts);if(!verifyStripe(req,raw))return bad(res,401,'Invalid Stripe signature');const evt=JSON.parse(raw.toString('utf8'));
- const id=clean(evt.id,150),session=evt.data?.object||{};if(!id)return bad(res,400,'Invalid event');const client=clean(session.client_reference_id,120);const product=clean(session.metadata?.mirra_product||session.payment_link&&process.env.MIRRA_STRIPE_LINK_PRODUCT||'plus',40);
- const existing=await pool.query('SELECT id FROM mirra_stripe_events WHERE id=$1',[id]);if(existing.rowCount)return send(res,200,{received:true,duplicate:true});
- if(evt.type==='checkout.session.completed'&&session.payment_status==='paid'&&client&&['plus','deepDive','together'].includes(product))await pool.query('INSERT INTO mirra_entitlements(user_id,product,source) VALUES($1,$2,$3) ON CONFLICT (user_id,product) DO NOTHING',[client,product,session.id]).catch(e=>console.warn('Entitlement not applied:',e.message));
- await pool.query('INSERT INTO mirra_stripe_events(id) VALUES($1)',[id]);return send(res,200,{received:true});}
+async function stripeWebhook(req,res){
+ const parts=[];let size=0;
+ for await(const b of req){size+=b.length;if(size>100000)return bad(res,413,'Too large');parts.push(b)}
+ const raw=Buffer.concat(parts);
+ if(!verifyStripe(req,raw))return bad(res,401,'Invalid Stripe signature');
+ const evt=JSON.parse(raw.toString('utf8'));
+ if(!evt.id||typeof evt.id!=='string')return bad(res,400,'Invalid Stripe event');
+ const payload=evt.data?.object||{};
+ const linkMap={};
+ for(const [product,key] of [['deepDive','MIRRA_STRIPE_LINK_DEEP_DIVE_ID'],['plus','MIRRA_STRIPE_LINK_PLUS_ID'],['together','MIRRA_STRIPE_LINK_TOGETHER_ID']]){
+  const id=process.env[key];if(id&&id.startsWith('plink_'))linkMap[id]=product;
+ }
+ const tx=await pool.connect();
+ try{
+  await tx.query('BEGIN');
+  const received=await tx.query('INSERT INTO mirra_stripe_events(id) VALUES($1) ON CONFLICT DO NOTHING RETURNING id',[evt.id]);
+  if(!received.rowCount){await tx.query('COMMIT');return send(res,200,{received:true,duplicate:true})}
+  if(evt.type==='checkout.session.completed'&&payload.payment_status==='paid'){
+   const product=linkMap[clean(payload.payment_link,150)];
+   const userId=clean(payload.client_reference_id,120);
+   if(product&&userId){
+    const user=await tx.query('SELECT id FROM mirra_users WHERE id=$1',[userId]);
+    if(user.rowCount){
+     await tx.query('INSERT INTO mirra_entitlements(user_id,product,source) VALUES($1,$2,$3) ON CONFLICT(user_id,product) DO UPDATE SET source=excluded.source',[userId,product,clean(payload.id,100)]);
+     if((product==='plus'||product==='together')&&payload.subscription){
+      await tx.query('INSERT INTO mirra_billing_subscriptions(subscription_id,user_id,product,status) VALUES($1,$2,$3,$4) ON CONFLICT(subscription_id) DO UPDATE SET status=excluded.status',[clean(payload.subscription,120),userId,product,'active']);
+     }
+    }
+   }
+  }
+  if(['customer.subscription.updated','customer.subscription.deleted'].includes(evt.type)&&payload.id){
+   const subId=clean(payload.id,120),status=evt.type==='customer.subscription.deleted'?'canceled':clean(payload.status,40);
+   const found=await tx.query('UPDATE mirra_billing_subscriptions SET status=$2 WHERE subscription_id=$1 RETURNING user_id,product',[subId,status]);
+   if(found.rowCount){
+    const {user_id,product}=found.rows[0];
+    const active=await tx.query("SELECT count(*)::int AS n FROM mirra_billing_subscriptions WHERE user_id=$1 AND product=$2 AND status IN ('active','trialing')",[user_id,product]);
+    if(active.rows[0].n===0)await tx.query('DELETE FROM mirra_entitlements WHERE user_id=$1 AND product=$2',[user_id,product]);
+    else await tx.query('INSERT INTO mirra_entitlements(user_id,product,source) VALUES($1,$2,$3) ON CONFLICT DO NOTHING',[user_id,product,subId]);
+   }
+  }
+  await tx.query('COMMIT');
+  return send(res,200,{received:true});
+ }catch(e){await tx.query('ROLLBACK').catch(()=>{});throw e}finally{tx.release()}
+}
 function rate(req){const key=String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0];const now=Date.now();const h=traffic.get(key)||{ts:now,count:0};if(now-h.ts>MINUTE){h.ts=now;h.count=0}h.count++;traffic.set(key,h);if(traffic.size>4000){for(const [k,v] of traffic)if(now-v.ts>MINUTE)traffic.delete(k)}return h.count<85}
 async function api(req,res,url){const p=url.pathname,m=req.method;
  if(m==='GET'&&p==='/api/health')return send(res,200,{ok:true,service:'MIRRA 2.0',database:Boolean(pool),ai:Boolean(process.env.OPENAI_API_KEY||process.env.DEEPSEEK_API_KEY)});
