@@ -18,7 +18,7 @@ test('unique sourced benchmarks, bounded tasks and roles have stable owners',()=
  assert.equal(new Set(b.map(x=>x.id)).size,b.length);
  assert.equal(new Set(w.map(x=>x.id)).size,w.length);
  const roles=new Set(cfg.roles.map(x=>x.id));
- for(const task of w){assert.ok(roles.has(task.owner));assert.match(task.id,/^F\\d{2}$/);assert.ok(task.acceptance.length>=35);assert.equal(task.status,'DEFINED_NOT_DISPATCHED')}
+ for(const task of w){assert.ok(roles.has(task.owner));assert.match(task.id,/^F[0-9]{2}$/);assert.ok(task.acceptance.length>=35);assert.equal(task.status,'DEFINED_NOT_DISPATCHED')}
  for(const item of b){assert.match(item.primary_url,/^https:\/\//);assert.equal(item.last_verified_date,null)}
 });
 test('must distinguish mere browser metrics from real users and keep IPIP claims exact',()=>{
