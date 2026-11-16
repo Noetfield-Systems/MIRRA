@@ -38,6 +38,7 @@ jobs:
       - name: Install Chromium for realistic synthetic journeys
         run: npx playwright install --with-deps chromium
       - name: Start disposable local MIRRA for synthetic personas
+        id: local_mirra
         env:
           DATABASE_URL: postgres://mirra_test:mirra_test@127.0.0.1:5432/mirra_test
           MIRRA_SYNTHETIC_LAB: "1"
@@ -58,7 +59,7 @@ jobs:
       - name: Execute nine isolated behavioral QA personas
         run: npm run test:synthetic
       - name: Assert synthetic personas did not enter real-user analytics
-        if: always()
+        if: ${{ always() && steps.local_mirra.outcome == 'success' }}
         env:
           DATABASE_URL: postgres://mirra_test:mirra_test@127.0.0.1:5432/mirra_test
         run: |
