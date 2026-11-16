@@ -6,10 +6,29 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: mirra_test
+          POSTGRES_PASSWORD: mirra_test
+          POSTGRES_DB: mirra_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mirra_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: npm install --no-audit --no-fund
-      - run: npm test
+      - name: Validate frontend, scoring, and static server
+        run: npm test
+      - name: Verify complete real database journey
+        run: node --test test/api.integration.test.cjs
+        env:
+          MIRRA_TEST_DATABASE_URL: postgres://mirra_test:mirra_test@localhost:5432/mirra_test
