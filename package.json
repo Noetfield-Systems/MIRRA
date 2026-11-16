@@ -1,13 +1,1 @@
-{
-  "name": "mirra-editorial",
-  "version": "1.0.0",
-  "private": true,
-  "description": "MIRRA psychology and self-discovery experience",
-  "scripts": {
-    "start": "node server.js",
-    "test": "node --check enhancements.js && node --check server.js && node --test test/smoke.test.cjs"
-  },
-  "engines": {
-    "node": ">=20"
-  }
-}
+{"name":"mirra","version":"2.0.0","private":true,"description":"MIRRA psychology, reflection and relationships","scripts":{"start":"node server.js","test":"node --check server.js && node --check app.js && node --test test/*.test.cjs"},"engines":{"node":">=20"},"dependencies":{"pg":"^8.13.1"}}

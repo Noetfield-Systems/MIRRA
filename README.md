@@ -1,21 +1,35 @@
-# MIRRA
+# MIRRA 2.0
 
-Editorial psychology and self-discovery web experience.
+Editorial psychology, relationship discovery, and thoughtful self-reflection.
 
-## Run
+## Features
 
-`npm start` serves the app on `PORT` or 3000. No package installation required.
+- 50-item IPIP Big Five factor markers with published reverse-scoring, plus 9 original eight-question reflection journeys.
+- MIRRA Together: a two-person invitation experience with comparisons and conversation starters. Guest participation does not require an account.
+- Email + password accounts backed by PostgreSQL, with private reports and journal entries; account export and deletion.
+- Daily reflection prompts, 3 interactive stories, printable result cards, profile history, and personal Mirror.
+- AI Mirror works when `OPENAI_API_KEY` or `DEEPSEEK_API_KEY` is present. Otherwise it explicitly provides guided prompts, not AI-generated content.
+- Hosted payment links may be configured via `MIRRA_*_LINK`. Checkout buttons remain disabled until configured. Payment unlocking requires Stripe webhook configuration.
+- Original MIRRA experience remains available at `/classic`.
 
-## Content
+## Development
 
-Nine self-guided experiences with 134 questions: Personality Atlas (30), Relationship Lens (16), Decision Patterns (16), Emotional Landscape (12), Art of Boundaries (12), What Matters Most (12), Social Rhythm (12), Finding Your Footing (12), and Shape of Your Days (12).
-
-Responses and journal entries remain in the user's browser storage. Scores and styles are **exploratory** and not validated clinical or psychometric diagnoses.
-
-## Design
-
-English-first editorial photography and typography. The original illustration assets are inlined in `index.html`. Expanded portrait images use the public Unsplash CDN and may require a network connection. Photos illustrate a diversity of people, not their psychological traits.
+`npm install && npm test && npm start` (Node.js 20+).
 
 ## Deployment
 
-Node static server (Railway compatible): `npm start`.
+Use Railway repo source `Noetfield-Systems/MIRRA`, branch `main`. Set `DATABASE_URL` to a dedicated PostgreSQL database or a PostgreSQL reference, ideally with a dedicated user. The server creates only `mirra_*` tables. Set `NODE_ENV=production` to ensure Secure cookies. SSL is provided by the host proxy.
+
+Variables:
+- `DATABASE_URL` required for cloud accounts, reports, journals, invitations, and entitlements.
+- `OPENAI_API_KEY` or `DEEPSEEK_API_KEY` optional for live AI responses; model name override `MIRRA_AI_MODEL`.
+- `MIRRA_DEEP_DIVE_LINK`, `MIRRA_PLUS_LINK`, `MIRRA_TOGETHER_LINK` optional checkout URLs.
+- `STRIPE_WEBHOOK_SECRET` required to securely process payment events. Endpoint `/api/stripe/webhook`.
+- `PUBLIC_ORIGIN` optional base URL for invitation links.
+
+## Safety and science
+
+Public-domain IPIP: https://ipip.ori.org/new_ipip-50-item-scale.htm
+Goldberg LR (1992), *Psychological Assessment*, 4(1), 26–42. The 0–100 indices are transformed scale scores, not population percentiles. The creative journeys are reflective and not psychometrically validated. Nothing in the app is a clinical diagnosis or therapy service.
+
+Privacy: browser-based guest experience, account-scoped database access, HTTPS-only secure session cookies in production, CSRF origin checks, export and deletion. Anyone with an invitation link can view a completed two-person comparison; never share the link publicly unless you want that audience.
