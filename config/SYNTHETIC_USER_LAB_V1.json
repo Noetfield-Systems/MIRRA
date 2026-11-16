@@ -139,6 +139,23 @@
         "verify content and answers still work"
       ],
       "success": "critical experience works without external photo CDN"
+    },
+    {
+      "id": "fictional_demo",
+      "label": "Visitor exploring an explicitly fictional Together example",
+      "route": "together",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "answer_strategy": "varied",
+      "behavior": [
+        "select example preview",
+        "answer eight questions",
+        "review side-by-side fictional responses",
+        "check demo label"
+      ],
+      "success": "view a labeled fictional example without an external invitation"
     }
   ],
   "critics": [

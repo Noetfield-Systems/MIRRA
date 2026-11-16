@@ -3,7 +3,7 @@ const {test}=require('node:test'),a=require('node:assert/strict'),fs=require('no
 const p=JSON.parse(fs.readFileSync('config/SYNTHETIC_USER_LAB_V1.json','utf8'));
 const app=fs.readFileSync('app.js','utf8'),srv=fs.readFileSync('server.js','utf8'),wf=fs.readFileSync('.github/workflows/quality.yml','utf8');
 test('eight synthetic personas stay distinct from real user claims',()=>{
- a.equal(p.is_real_audience,false);a.equal(p.personas.length,8);a.equal(new Set(p.personas.map(x=>x.id)).size,8);
+ a.equal(p.is_real_audience,false);a.equal(p.personas.length,9);a.equal(new Set(p.personas.map(x=>x.id)).size,8);
  a.match(app,/navigator.webdriver===true/);a.match(srv,/MIRRA_SYNTHETIC_LAB/);
 });
 test('reuse original quality workflow and disposable database',()=>{
@@ -27,4 +27,9 @@ test('small-phone report wraps long titles and Big Five avoids percentile claims
 test('Together has an explicit fictional preview without invented community activity',()=>{
  a.match(app,/function demoTogether\(\)/);a.match(app,/Alex is a fictional example/);
  a.match(app,/state.demoMode/);a.match(app,/data-action="demo-together"/);
+});
+
+test('fictional example is exercised in a separate browser scenario',()=>{
+ a.ok(p.personas.some(x=>x.id==='fictional_demo'));
+ a.match(fs.readFileSync('scripts/synthetic-user-lab.cjs','utf8'),/fictional_demo/);
 });

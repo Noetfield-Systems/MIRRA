@@ -473,7 +473,7 @@
     "workflow": ".github/workflows/quality.yml",
     "cadence": "every six hours within original MIRRA CI",
     "purpose": "scripted human-like browser scenarios, issue discovery and source evidence",
-    "synthetic_personas": 8,
+    "synthetic_personas": 9,
     "public_user_count_contribution": 0,
     "real_user_validation_required": true,
     "company_os_handoff": "M22 source-backed workstreams, no new agent queue",

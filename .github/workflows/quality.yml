@@ -55,7 +55,7 @@ jobs:
           done
           cat /tmp/mirra-synthetic-server.log
           exit 1
-      - name: Execute eight isolated behavioral QA personas
+      - name: Execute nine isolated behavioral QA personas
         run: npm run test:synthetic
       - name: Assert synthetic personas did not enter real-user analytics
         if: always()
