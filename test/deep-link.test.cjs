@@ -16,3 +16,5 @@ test('app icon and social preview resolve from all routes',()=>{
   assert.ok(fs.existsSync('favicon.svg'));
   assert.match(html,/og:image/);
 });
+
+test('share routes supply unique page titles and canonical URLs',()=>{assert.match(server,/replaceAll\('MIRRA \| The psychology/);assert.match(server,/og:url/);});
