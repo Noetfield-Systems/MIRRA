@@ -1,0 +1,203 @@
+{
+  "schema": "mirra.synthetic-user-lab.v1",
+  "release": "2026-11-16",
+  "is_real_audience": false,
+  "execution": "browser-driven deterministic scenario personas; critiques are hypotheses, never market evidence",
+  "cadence": "existing MIRRA quality workflow scheduled every 6h; product-specific CI not an extra OS",
+  "base_url": "http://127.0.0.1:3000",
+  "dataset": "isolated ephemeral GitHub Actions PostgreSQL",
+  "customer_metrics": "excluded; synthetic runs cannot increment production activation",
+  "personas": [
+    {
+      "id": "curious_newcomer",
+      "label": "Curious first-time visitor",
+      "route": "emotions",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "answer_strategy": "mostly warm",
+      "behavior": [
+        "start directly",
+        "scan first question",
+        "answer quickly",
+        "save report"
+      ],
+      "success": "complete 8-question journey"
+    },
+    {
+      "id": "impatient_mobile",
+      "label": "Busy mobile visitor",
+      "route": "relationships",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "answer_strategy": "first option",
+      "behavior": [
+        "answer immediately",
+        "wait for auto advance",
+        "check 320px overflow"
+      ],
+      "success": "complete without extra continue taps"
+    },
+    {
+      "id": "thoughtful_returner",
+      "label": "Reflective returning visitor",
+      "route": "decisions",
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "answer_strategy": "varied",
+      "behavior": [
+        "go backward and change answer",
+        "reload",
+        "resume reflection",
+        "complete and view saved report"
+      ],
+      "success": "resume and reflect without losing work"
+    },
+    {
+      "id": "evidence_skeptic",
+      "label": "Scientific accuracy reviewer",
+      "route": "ipip50",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "answer_strategy": "balanced",
+      "behavior": [
+        "complete 50 IPIP items",
+        "check 5 dimensions",
+        "review measurement limitations"
+      ],
+      "success": "transparent scoring and 5 interpretable dimensions"
+    },
+    {
+      "id": "connection_seeker",
+      "label": "Relationship-first visitor",
+      "route": "together",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "answer_strategy": "varied",
+      "behavior": [
+        "answer eight prompts",
+        "create guest invite",
+        "open in fresh second browser",
+        "answer independently",
+        "inspect comparison"
+      ],
+      "success": "two-person outcome without accounts"
+    },
+    {
+      "id": "low_frictions",
+      "label": "Keyboard and reduced-motion reviewer",
+      "route": "emotions",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "answer_strategy": "keyboard",
+      "behavior": [
+        "reduced motion",
+        "activate options via keyboard",
+        "check focus and labels"
+      ],
+      "success": "keyboard-only assessment"
+    },
+    {
+      "id": "daily_journaler",
+      "label": "Daily-return user",
+      "route": "daily",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "answer_strategy": "one sentence",
+      "behavior": [
+        "choose mood",
+        "save private reflection",
+        "reopen daily",
+        "avoid duplicate prompt"
+      ],
+      "success": "local return record without account"
+    },
+    {
+      "id": "resilient_images",
+      "label": "Low-bandwidth visitor",
+      "route": "values",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "answer_strategy": "varied",
+      "behavior": [
+        "block third-party photography",
+        "verify content and answers still work"
+      ],
+      "success": "critical experience works without external photo CDN"
+    }
+  ],
+  "critics": [
+    {
+      "id": "qa",
+      "role": "Browser journey QA",
+      "criteria": [
+        "no javascript exceptions",
+        "user journey completion",
+        "no same-origin asset errors",
+        "recoverable errors"
+      ]
+    },
+    {
+      "id": "editor",
+      "role": "Human-language and psychology reviewer",
+      "criteria": [
+        "no diagnostic overclaims",
+        "questions are readable",
+        "result is specific",
+        "report explains limitations"
+      ]
+    },
+    {
+      "id": "design",
+      "role": "Editorial UX critic",
+      "criteria": [
+        "mobile horizontal overflow < 2px",
+        "visible action above fold",
+        "answers at least 44px height",
+        "image failure fallback"
+      ]
+    },
+    {
+      "id": "community",
+      "role": "Connection and retention analyst",
+      "criteria": [
+        "invites are voluntary",
+        "no login/paywall to try",
+        "daily behavior is gentle",
+        "no fake social proof"
+      ]
+    },
+    {
+      "id": "privacy",
+      "role": "Privacy and ethical reviewer",
+      "criteria": [
+        "no production analytics from lab",
+        "no public simulated users",
+        "private invite links",
+        "no nonconsensual account or email"
+      ]
+    }
+  ],
+  "rules": {
+    "strict": "block only real regressions: page errors, missing answers/results, broken invite flow or horizontal overflow",
+    "review": "record softer editorial critiques as hypothesis",
+    "proof": "screenshots, action trail, code SHA, checks, explicit synthetic label",
+    "remediation": "feed one highest-severity reproducible flaw into existing M22/Factory workstream, no new agent queue",
+    "never": "never count a simulated browser as a person or invent reviews/relationships"
+  }
+}
