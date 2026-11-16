@@ -9,7 +9,7 @@ const PORT=Number(process.env.PORT||3000);
 const pool=process.env.DATABASE_URL?new Pool({connectionString:process.env.DATABASE_URL,max:5,connectionTimeoutMillis:10000}):null;
 const root=__dirname;
 const prod=process.env.NODE_ENV==='production';
-const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'application/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml'};
+const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'application/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml','.xml':'application/xml; charset=utf-8','.txt':'text/plain; charset=utf-8'};
 const traffic=new Map();
 const MINUTE=60000;
 const random=(n=24)=>crypto.randomBytes(n).toString('base64url');
@@ -102,16 +102,18 @@ async function api(req,res,url){const p=url.pathname,m=req.method;
   const d=await parseBody(req);const kinds=['landing_view','quiz_started','quiz_completed','invite_created','invite_completed','daily_completed','share_clicked','return_visit','story_started'];
   const visitor=clean(d.visitor,40),kind=clean(d.kind,40),journey=clean(d.journey,40),source=clean(d.source,40);
   if(!/^[a-f0-9-]{36}$/.test(visitor)||!kinds.includes(kind)||!(/^[a-z0-9_-]{1,40}$/i.test(journey))||!(/^[a-z0-9_-]{0,40}$/i.test(source)))return bad(res,400,'Invalid event');
+  await pool.query("DELETE FROM mirra_funnel_events WHERE created_at < now()-interval '30 days'").catch(()=>{});
   await pool.query('INSERT INTO mirra_funnel_events(id,visitor,kind,journey,source) VALUES($1,$2,$3,$4,$5) ON CONFLICT(visitor,kind,journey,day) DO NOTHING',[crypto.randomUUID(),visitor,kind,journey,source]);
   return send(res,202,{accepted:true});
  }
  if(m==='GET'&&p==='/api/funnel/summary'){
-  const [q,journeys,sources]=await Promise.all([
+  const [q,journeys,sources,feedback]=await Promise.all([
     pool.query("SELECT count(DISTINCT visitor)::int AS anonymous_browsers, count(DISTINCT visitor) FILTER (WHERE kind='quiz_started')::int AS started_browsers, count(DISTINCT visitor) FILTER (WHERE kind='quiz_completed')::int AS completed_browsers, count(DISTINCT visitor) FILTER (WHERE kind='return_visit')::int AS returning_browsers, count(DISTINCT visitor) FILTER (WHERE kind='share_clicked')::int AS sharing_browsers FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days'"),
     pool.query("SELECT journey,count(DISTINCT visitor) FILTER(WHERE kind='quiz_started')::int AS started,count(DISTINCT visitor) FILTER(WHERE kind='quiz_completed')::int AS completed FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days' AND kind IN ('quiz_started','quiz_completed') GROUP BY journey ORDER BY started DESC LIMIT 12"),
-    pool.query("SELECT source,count(DISTINCT visitor)::int AS browsers FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days' AND kind='landing_view' GROUP BY source ORDER BY browsers DESC LIMIT 12")
+    pool.query("SELECT source,count(DISTINCT visitor)::int AS browsers FROM mirra_funnel_events WHERE created_at>=now()-interval '7 days' AND kind='landing_view' GROUP BY source ORDER BY browsers DESC LIMIT 12"),
+    pool.query("SELECT area,count(*)::int AS submissions FROM mirra_feedback WHERE created_at>=now()-interval '7 days' GROUP BY area ORDER BY submissions DESC")
   ]);
-  return send(res,200,{windowDays:7,unit:'anonymous browser identifiers, not verified people',...q.rows[0],journeys:journeys.rows,sources:sources.rows});
+  return send(res,200,{windowDays:7,unit:'anonymous browser identifiers, not verified people',...q.rows[0],journeys:journeys.rows,sources:sources.rows,feedbackAreas:feedback.rows});
  }
  if(m==='POST'&&p==='/api/feedback'){
   const d=await parseBody(req),message=clean(d.text,1000),area=clean(d.area,40);
