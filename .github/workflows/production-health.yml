@@ -28,3 +28,29 @@ jobs:
             sleep 2
           done
           test "$ready" -eq 1
+
+      - name: Verify shared experience route and assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://mirra-psychology-web-production.up.railway.app"
+          for n in $(seq 1 18); do
+            if curl --max-time 15 --fail --silent --show-error "$base/q/emotions?utm_source=ci_probe" -o /tmp/mirra-share.html &&
+               grep -q 'href="/styles.css"' /tmp/mirra-share.html &&
+               grep -q 'src="/app.js"' /tmp/mirra-share.html &&
+               curl --max-time 15 --fail --silent --show-error "$base/styles.css" -o /dev/null &&
+               curl --max-time 15 --fail --silent --show-error "$base/app.js" -o /dev/null &&
+               curl --max-time 15 --fail --silent --show-error "$base/favicon.svg" -o /dev/null; then
+              echo "SHARED LINK VERIFIED: /q/emotions, CSS, JS, favicon"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "SHARED LINK BROKEN"; exit 1
+      - name: Report aggregate first-circle activation (not unique verified users)
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://mirra-psychology-web-production.up.railway.app"
+          curl --max-time 20 --fail --silent --show-error "$base/api/funnel/summary" -o /tmp/mirra-growth.json
+          node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync("/tmp/mirra-growth.json","utf8")); const fields=["windowDays","anonymous_browsers","started_browsers","completed_browsers","returning_browsers","sharing_browsers","firstCircleOptIns"]; const safe=Object.fromEntries(fields.map(k=>[k,x[k]??null])); console.log("MIRRA AGGREGATE FUNNEL",JSON.stringify(safe)); console.log("NOTE: Browser identifiers and opt-ins are not independently verified people.");'
