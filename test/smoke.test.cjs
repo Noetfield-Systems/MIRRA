@@ -1,0 +1,11 @@
+'use strict';
+const {test,before,after}=require('node:test');
+const assert=require('node:assert/strict');
+const {spawn}=require('node:child_process');
+const fs=require('node:fs');
+let child;const port=39081;const base='http://127.0.0.1:'+port;
+before(async()=>{child=spawn(process.execPath,['server.js'],{env:{...process.env,PORT:String(port)},stdio:'ignore'});for(let i=0;i<60;i++){try{const r=await fetch(base+'/');if(r.ok)return}catch{}await new Promise(r=>setTimeout(r,100))}throw Error('MIRRA server did not start')});
+after(()=>{if(child)child.kill('SIGTERM')});
+test('landing page and scripts are served',async()=>{let r=await fetch(base+'/');assert.equal(r.status,200);assert.match(await r.text(),/The art of understanding/);r=await fetch(base+'/enhancements.js');assert.equal(r.status,200);assert.match(await r.text(),/The Emotional Landscape/);r=await fetch(base+'/enhancements.css');assert.equal(r.status,200);assert.match(await r.text(),/editorial-exhibit/)});
+test('missing paths have real 404s',async()=>{const r=await fetch(base+'/no-such-page');assert.equal(r.status,404)});
+test('all nine journeys and 134 questions are represented',()=>{const js=fs.readFileSync('enhancements.js','utf8');assert.equal((js.match(/\bp\('/g)||[]).length>=85,true);for(const title of ['The Emotional Landscape','The Art of Boundaries','What Matters Most','Your Social Rhythm','Finding Your Footing','The Shape of Your Days'])assert.ok(js.includes(title));assert.ok(fs.readFileSync('index.html','utf8').includes('The Personality Atlas'))});
