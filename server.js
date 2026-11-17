@@ -38,6 +38,7 @@ async function initialize(){
  CREATE TABLE IF NOT EXISTS mirra_feedback(id text PRIMARY KEY,area text NOT NULL,message text NOT NULL,created_at timestamptz DEFAULT now());
  CREATE TABLE IF NOT EXISTS mirra_first_circle(email text PRIMARY KEY,interest text NOT NULL,source text NOT NULL,consent_at timestamptz NOT NULL DEFAULT now());
  CREATE TABLE IF NOT EXISTS mirra_billing_subscriptions(subscription_id text PRIMARY KEY,user_id text NOT NULL REFERENCES mirra_users(id) ON DELETE CASCADE,product text NOT NULL,status text NOT NULL,created_at timestamptz DEFAULT now());
+ CREATE TABLE IF NOT EXISTS mirra_learning_progress(user_id text PRIMARY KEY REFERENCES mirra_users(id) ON DELETE CASCADE,awards jsonb NOT NULL DEFAULT '{}'::jsonb,guide text NOT NULL DEFAULT 'ari',updated_at timestamptz DEFAULT now());
  CREATE TABLE IF NOT EXISTS mirra_quiz_progress(visitor text NOT NULL,journey text NOT NULL,day date NOT NULL DEFAULT CURRENT_DATE,source text NOT NULL,max_answered integer NOT NULL DEFAULT 0,total_questions integer NOT NULL,completed boolean NOT NULL DEFAULT false,updated_at timestamptz DEFAULT now(),PRIMARY KEY(visitor,journey,day));
  ALTER TABLE mirra_feedback ADD COLUMN IF NOT EXISTS rating smallint;
  ALTER TABLE mirra_feedback ADD COLUMN IF NOT EXISTS journey text;
@@ -176,6 +177,27 @@ async function api(req,res,url){const p=url.pathname,m=req.method;
  if(!q.rowCount)return bad(res,409,'Invitation already completed or not found.');await logEvent('together_completed');return send(res,200,{ok:true})}
  const u=await findUser(req);
  if(!u)return bad(res,401,'Sign in to save your experience.');
+ if(m==='GET'&&p==='/api/progress/ledger'){
+  const q=await pool.query('SELECT awards,guide,updated_at FROM mirra_learning_progress WHERE user_id=$1',[u.id]);
+  return send(res,200,{awards:q.rows[0]?.awards||{},guide:q.rows[0]?.guide||'ari',updatedAt:q.rows[0]?.updated_at||null,unit:'private non-monetary learning progress'});
+ }
+ if(m==='POST'&&p==='/api/progress/ledger'){
+  const d=await parseBody(req),raw=d.awards,guide=clean(d.guide,25);
+  if(!raw||typeof raw!=='object'||Array.isArray(raw)||!['ari','rowan','june'].includes(guide)||Object.keys(raw).length>300)return bad(res,400,'Invalid learning progress');
+  const normalized={};
+  const paths=new Set(['emotions','connection','boundaries','choices']);
+  for(const [key,value] of Object.entries(raw)){
+   let expected=null;
+   if(/^daily:\d{4}-\d{2}-\d{2}$/.test(key))expected=5;
+   else if(/^lesson:[a-z]+:[0-3]$/.test(key)){const part=key.split(':');if(paths.has(part[1]))expected=10}
+   else if(/^quiz:[a-z0-9_]+$/.test(key))expected=key==='quiz:ipip50'?25:20;
+   if(expected===null||!value||value.points!==expected||typeof value.at!=='string'||value.at.length>40||Number.isNaN(Date.parse(value.at)))return bad(res,400,'Invalid learning award');
+   normalized[key]={points:expected,at:new Date(value.at).toISOString()};
+  }
+  await pool.query("INSERT INTO mirra_learning_progress(user_id,awards,guide) VALUES($1,$2,$3) ON CONFLICT(user_id) DO UPDATE SET awards=mirra_learning_progress.awards || EXCLUDED.awards,guide=EXCLUDED.guide,updated_at=now()",[u.id,JSON.stringify(normalized),guide]);
+  const q=await pool.query('SELECT awards,guide FROM mirra_learning_progress WHERE user_id=$1',[u.id]);
+  return send(res,200,{awards:q.rows[0].awards,guide:q.rows[0].guide});
+ }
  if(m==='GET'&&p==='/api/reports'){const q=await pool.query('SELECT id,journey,score,created_at FROM mirra_reports WHERE user_id=$1 ORDER BY created_at DESC LIMIT 50',[u.id]);return send(res,200,{reports:q.rows})}
  if(m==='POST'&&p==='/api/reports'){const d=await parseBody(req),journey=clean(d.journey,60),n=journey==='ipip50'?50:Number(d.answers?.length);if(!['ipip50','relationships','decisions','emotions','boundaries','values','social','resilience','habits','focus','friendship','conflict','motivation','selfcare','communication','transitions','personality'].includes(journey)||!Number.isInteger(n)||n<8||n>60||!accepted(d.answers,n))return bad(res,400,'Complete the assessment first.');let score=journey==='ipip50'?scoreIPIP(d.answers):{label:clean(d.summary?.label,100)||'Your reflection',description:clean(d.summary?.description,500),exploratory:true};const id=crypto.randomUUID();await pool.query('INSERT INTO mirra_reports(id,user_id,journey,score,answers) VALUES($1,$2,$3,$4,$5)',[id,u.id,journey,JSON.stringify(score),JSON.stringify(d.answers)]);await logEvent('assessment_completed');return send(res,201,{id,score})}
  if(m==='GET'&&p==='/api/journal'){const q=await pool.query('SELECT id,body,created_at FROM mirra_journal WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100',[u.id]);return send(res,200,{entries:q.rows})}
