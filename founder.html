@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>MIRRA · Founder Desk</title>
+<style>
+:root{--paper:#f6f3eb;--forest:#263e30;--soft:#69756c;--line:#d9ddd4;--copper:#9c7254}
+*{box-sizing:border-box}body{background:var(--paper);margin:0;color:var(--forest);font:14px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}button,input,select{font:inherit}
+header{padding:26px 5vw;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:25px}header strong{font:28px Georgia,serif;letter-spacing:.15em}header span{font-size:10px;letter-spacing:.18em;text-transform:uppercase}
+main{max-width:1260px;margin:auto;padding:65px 5vw}h1,h2{font-family:Georgia,serif;font-weight:400;letter-spacing:-.03em;line-height:1.08}h1{font-size:clamp(48px,7vw,96px);margin:12px 0 28px}h2{font-size:37px}em{color:var(--copper)}p,small{color:var(--soft)}
+.btn,button{background:var(--forest);border:1px solid var(--forest);color:#fff;padding:11px 17px;cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #a9764d;outline-offset:2px}
+#auth{max-width:550px;background:#e5ece2;padding:30px;margin:40px 0}#auth form{display:flex;gap:10px;flex-wrap:wrap}#auth input{flex:1;min-width:225px;padding:12px;border:1px solid var(--line)}
+.eyebrow{font-size:10px;letter-spacing:.17em;color:var(--copper);font-weight:700}#desk[hidden],#auth[hidden]{display:none}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:40px 0}.stat{border:1px solid var(--line);padding:20px;background:#fffefb}.stat strong{display:block;font:43px/1 Georgia,serif}.stat span{font-size:11px;color:var(--soft)}
+section.panel{background:#fffefb;border:1px solid var(--line);padding:clamp(16px,4vw,34px);margin:25px 0;overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:740px}th,td{border-bottom:1px solid var(--line);padding:13px 12px;text-align:left;vertical-align:top;font-size:12px}th{color:var(--soft);font-size:10px;letter-spacing:.1em;text-transform:uppercase}td.message{max-width:450px;white-space:pre-wrap;overflow-wrap:anywhere}.panel select{padding:8px;border:1px solid var(--line);background:#f5f5ed;color:var(--forest)}
+.controls{display:flex;gap:9px;flex-wrap:wrap;margin:15px 0}.notice{margin-top:40px;border-left:3px solid var(--copper);padding:15px 20px;background:#ecebe3}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}header{padding:22px 5vw}main{padding-top:38px}}
+</style></head><body>
+<header><strong>MIRRA</strong><span>Founder Desk · Private feedback and voluntary community</span></header>
+<main><span class="eyebrow">INSIGHT FIRST · HUMAN OUTCOMES ONLY</span><h1>What are people<br><em>really telling us?</em></h1>
+<p>Review opt-in interest, direct product feedback and actual invitation completion. Keep volunteer records private. Browser activity and AI tests are not proof of real users.</p>
+<section id="auth"><span class="eyebrow">AUTHORIZED FOUNDER ACCESS</span><h2>Open the private desk.</h2>
+<p>Enter the <code>MIRRA_ADMIN_TOKEN</code> from the MIRRA Railway service variables. The token stays in this browser's memory, not a URL, form submission to analytics, or localStorage.</p>
+<form id="auth-form"><input type="password" id="token" minlength="24" placeholder="Founder access token" autocomplete="off" required><button type="submit">Open desk ↗</button></form>
+<p id="error" role="status"></p></section>
+<div id="desk" hidden>
+<div class="controls"><button id="refresh">Refresh from PostgreSQL</button><button id="export">Export consenting contacts CSV</button><button id="logout">Lock desk</button></div>
+<div class="grid" id="overview"></div>
+<section class="panel"><span class="eyebrow">PERSONAL FEEDBACK · PRIVATE</span><h2>Read, prioritize, resolve.</h2><p>No psychological answers or journals appear here. Feedback comments may still be personal; use them only for improving MIRRA.</p>
+<table><thead><tr><th>Received</th><th>Journey</th><th>Rating</th><th>Return intent</th><th>Feedback</th><th>Work status</th></tr></thead><tbody id="feedback"></tbody></table></section>
+<section class="panel"><span class="eyebrow">EXPLICIT FIRST CIRCLE OPT-INS</span><h2>People who chose to hear from us.</h2><p>Consent to receive MIRRA updates is not proof of app activation. Only contact within that consent and keep outreach relevant.</p>
+<table><thead><tr><th>Consent date</th><th>Email</th><th>Interest</th><th>Source</th></tr></thead><tbody id="contacts"></tbody></table></section>
+<div class="notice">We only know a person's interests from what they voluntarily tell us. Anonymous browser IDs, opt-ins, test accounts and synthetic personas are never reported here as verified humans. For performance trends visit <a href="/growth.html">Growth Signals</a>.</div>
+</div></main>
+<script>
+(()=>{'use strict';let token='',contacts=[];const q=s=>document.querySelector(s);const make=(tag,value)=>{const n=document.createElement(tag);n.textContent=String(value??'—');return n};
+async function api(path,method='GET',body){const res=await fetch(path,{method,headers:{authorization:'Bearer '+token,...(body?{'content-type':'application/json'}:{})},cache:'no-store',body:body?JSON.stringify(body):undefined});const data=await res.json().catch(()=>({}));if(!res.ok)throw Error(data.error||'Request failed');return data}
+async function load(){
+ const [o,f,c]=await Promise.all([api('/api/admin/overview'),api('/api/admin/feedback'),api('/api/admin/first-circle')]);contacts=c.items||[];
+ const stats=[['Registered accounts',o.registered_accounts],['Voluntary opt-ins',o.first_circle_opt_ins],['Private feedback',o.private_feedback_submissions],['Guest invites',o.guest_invites_created],['Completed guest pairs',o.guest_invites_completed]];
+ const grid=q('#overview');grid.replaceChildren();for(const [name,value] of stats){const card=make('div','');card.className='stat';card.append(make('strong',value),make('span',name));grid.append(card)}
+ const feedback=q('#feedback');feedback.replaceChildren();
+ for(const item of f.items||[]){
+  const tr=document.createElement('tr'),when=new Date(item.created_at).toLocaleDateString('en-CA');
+  for(const value of [when,item.journey||item.area,item.rating??'—',item.would_return===null?'—':item.would_return?'Yes':'No',item.message]){
+   const td=make('td',value);if(value===item.message)td.className='message';tr.append(td)
+  }
+  const cell=document.createElement('td'),sel=document.createElement('select');
+  for(const status of ['new','reviewed','planned','addressed']){const op=document.createElement('option');op.value=status;op.textContent=status;op.selected=item.status===status;sel.append(op)}
+  sel.addEventListener('change',async()=>{try{await api('/api/admin/feedback/'+encodeURIComponent(item.id)+'/status','POST',{status:sel.value})}catch(e){q('#error').textContent=e.message}});
+  cell.append(sel);tr.append(cell);feedback.append(tr);
+ }
+ if(!f.items?.length){const row=document.createElement('tr');const td=make('td','No feedback submitted yet');td.colSpan=6;row.append(td);feedback.append(row)}
+ const body=q('#contacts');body.replaceChildren();for(const item of contacts){const tr=document.createElement('tr');for(const field of ['consent_at','email','interest','source']){const v=field==='consent_at'?new Date(item[field]).toLocaleDateString('en-CA'):item[field];tr.append(make('td',v))}body.append(tr)}
+ if(!contacts.length){const row=document.createElement('tr');const td=make('td','No consenting contacts yet');td.colSpan=4;row.append(td);body.append(row)}
+}
+q('#auth-form').addEventListener('submit',async e=>{e.preventDefault();token=q('#token').value;q('#error').textContent='';try{await load();q('#auth').hidden=true;q('#desk').hidden=false;q('#token').value=''}catch(e){token='';q('#error').textContent=e.message}});
+q('#refresh').addEventListener('click',()=>load().catch(e=>alert(e.message)));
+q('#logout').addEventListener('click',()=>{token='';contacts=[];q('#desk').hidden=true;q('#auth').hidden=false});
+q('#export').addEventListener('click',()=>{const csv=[['email','interest','source','consent_at'],...contacts.map(x=>[x.email,x.interest,x.source,x.consent_at])].map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\n');const u=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=u;a.download='mirra-consenting-contacts.csv';a.click();setTimeout(()=>URL.revokeObjectURL(u),2000)});
+})();
+</script></body></html>
