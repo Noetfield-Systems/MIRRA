@@ -10,6 +10,26 @@
  const originalRender=render;
  const originalChoose=chooseAnswer;
  const originalComplete=completeQuiz;
+ let synchronizedAccount=null;
+ async function saveLearningProgress(){
+  if(!state.user?.id)return;
+  try{
+   const payload={awards:readLedger().awards,guide:getLocal('guide','ari')};
+   await request('/api/progress/ledger',{method:'POST',json:payload});
+  }catch(error){console.warn('MIRRA private learning progress sync unavailable',error.message)}
+ }
+ async function restoreLearningProgress(accountId){
+  try{
+   const cloud=await request('/api/progress/ledger');
+   if(state.user?.id!==accountId)return;
+   const local=readLedger();
+   const merged={awards:{...(cloud.awards||{}),...local.awards}};
+   putLocal('explorationLedger',merged);
+   if(!getLocal('guide',null)&&cloud.guide)putLocal('guide',cloud.guide);
+   await saveLearningProgress();
+   if(state.user?.id===accountId)render();
+  }catch(error){console.warn('MIRRA learning sync will remain device-local',error.message)}
+ }
  const earnKey='explorationLedger';
  const readLedger=()=>{const x=getLocal(earnKey,{awards:{}});return x&&x.awards&&typeof x.awards==='object'?x:{awards:{}}};
  const xp=()=>Object.values(readLedger().awards).reduce((sum,x)=>sum+(Number(x.points)||0),0);
@@ -18,6 +38,7 @@
   if(x.awards[key])return 0;
   x.awards[key]={points,at:new Date().toISOString()};
   putLocal(earnKey,x);
+  if(state.user?.id)void saveLearningProgress();
   return points;
  };
  const rank=()=>{const total=xp();return total>=180?'Steady Explorer':total>=80?'Curious Mind':total>=25?'First Chapter':'New Beginning'};
@@ -63,7 +84,7 @@
    '<h2>'+safe(lesson.title)+'</h2><p class="m-lesson-reading">'+safe(lesson.reading)+'</p><blockquote>'+safe(lesson.example)+'</blockquote>'+
    '<h3>A question to carry with you.</h3><p>'+safe(lesson.prompt)+'</p><div class="m-lesson-practice"><span class="eyebrow">TRY THIS, GENTLY</span><p>'+safe(lesson.practice)+'</p></div>'+
    '<div class="group-buttons"><button class="btn dark" data-m-complete="'+sel.path+':'+sel.index+'">'+(done?'Already explored · Reflect again':'Complete this chapter · +10 points')+' ↗</button>'+
-   (sel.index+1<path.lessons.length?'<button class="btn" data-m-lesson="'+sel.path+':'+(sel.index+1)+'">Next chapter ↗</button>':'<button class="btn" data-m-go="library">Choose another path ↗</button>')+'</div><p class="privacy-note">Points are a playful progress marker, not a score of your psychology. Saved on this device.</p></article>'+
+   (sel.index+1<path.lessons.length?'<button class="btn" data-m-lesson="'+sel.path+':'+(sel.index+1)+'">Next chapter ↗</button>':'<button class="btn" data-m-go="library">Choose another path ↗</button>')+'</div><p class="privacy-note">Points are a playful progress marker, not a score of your psychology. '+(state.user?'Synced to your private account.':'Saved on this device until you choose to sign in.')+'</p></article>'+
    '<aside class="m-lesson-guide">'+portrait(who)+'<span class="eyebrow">A FICTIONAL GUIDE</span><h3>'+safe(who.name)+'</h3><p>'+safe(who.copy)+'</p><strong>'+xp()+' reflection points</strong></aside></div></section>';
  }
  function libraryView(){
@@ -75,7 +96,7 @@
   }).join('');
   const guides=catalog.guides.map(v=>'<button class="m-guide-choice '+(v.id===g.id?'selected':'')+'" data-m-guide="'+v.id+'">'+portrait(v)+'<span><strong>'+safe(v.name)+'</strong><small>'+safe(v.role)+'</small><em>'+safe(v.copy)+'</em><small>Fictional editorial character</small></span></button>').join('');
   return intro('THE MIRRA LEARNING ROOM','Learn about yourself.<br><em>Little by little.</em>','Sixteen beautifully short chapters across four practical paths. Meaningful enough to keep, small enough to try today.')+
-    '<section class="container m-learning-library"><div class="m-progress-intro"><span class="eyebrow">YOUR INNER ATLAS</span><div><strong>'+xp()+'</strong><span>reflection points</span></div><p>'+rank()+'. Your progress is private and saved on this device. You can explore everything for free.</p></div>'+
+    '<section class="container m-learning-library"><div class="m-progress-intro"><span class="eyebrow">YOUR INNER ATLAS</span><div><strong>'+xp()+'</strong><span>reflection points</span></div><p>'+rank()+'. '+(state.user?'Your private progress follows your account across devices.':'Your progress is saved on this device until you create a free account.')+' Everything is free.</p></div>'+
     '<div class="section-head"><div><span class="eyebrow">FIND YOUR PATH</span><h2 class="section-title">Four ways to<br><em>grow.</em></h2></div><p>Recommended for you: '+safe(catalog.lessons[rec].name)+'. Start anywhere, in any order.</p></div>'+
     '<div class="m-learning-grid">'+chapters+'</div>'+
     '<div class="section-head"><div><span class="eyebrow">THE FICTIONAL GUIDES</span><h2 class="section-title">Different voices.<br><em>One curious world.</em></h2></div><p>These editorial characters suggest perspectives; they are not real members, therapists or live AI companions.</p></div><div class="m-guide-grid">'+guides+'</div></section>';
@@ -113,6 +134,7 @@
   '<button type="submit" class="btn dark">Send private feedback ↗</button><p class="privacy-note">No answers, contact details or account are attached to this note.</p></form></div></div>';
  }
  render=function(){
+  if(state.user?.id&&synchronizedAccount!==state.user.id){synchronizedAccount=state.user.id;void restoreLearningProgress(state.user.id)}
   if(state.route==='learn'){
    refreshNav();app.innerHTML=state.learningSelection?chapterView(state.learningSelection):libraryView();
    document.title='Learn and reflect | MIRRA';
@@ -164,7 +186,7 @@
    state.learningSelection={path:key,index};route('learn');return;
   }
   if(el.dataset.mGuide){
-   if(catalog.guides.some(g=>g.id===el.dataset.mGuide)){putLocal('guide',el.dataset.mGuide);render();toast('Your guide is here.')}return;
+   if(catalog.guides.some(g=>g.id===el.dataset.mGuide)){putLocal('guide',el.dataset.mGuide);if(state.user?.id)void saveLearningProgress();render();toast('Your guide is here.')}return;
   }
   if(el.dataset.mComplete){
    const [key,indexStr]=el.dataset.mComplete.split(':'),index=Number(indexStr);
