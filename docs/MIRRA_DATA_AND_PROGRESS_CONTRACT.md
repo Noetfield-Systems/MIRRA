@@ -21,3 +21,12 @@
 ## Security and privacy
 Funnel events and progress are optional. MIRRA excludes its automated Chromium runs, do-not-track browsers and people who disable analytics. The synthetic lab uses a disposable local PostgreSQL and never sends production events. Question analytics do not carry answer text, name, email or private journal text. 
 Never automatically import psychological data to Fieldwork, email providers or ad platforms. Community contacts require appropriate channel permissions. If further data collection is proposed, revise the consent text and acceptance tests before enabling it.
+
+## Founder feedback operations
+
+- Private founder desk: https://mirra-psychology-web-production.up.railway.app/founder.html
+- Authorization: `MIRRA_ADMIN_TOKEN` is configured only in Railway's production service Variables. Never commit, embed, or put the value in a URL. The desk holds it in page memory and sends it as `Authorization: Bearer` only to same-origin `/api/admin/*` endpoints.
+- Access control: admin API returns HTTP 401 without a valid token; registered user logins alone do not grant founder access.
+- Dashboard displays actual private feedback text and opt-in emails to the authorized operator only; public `/growth.html` publishes no contact list or raw feedback.
+- Feedback triage statuses: `new`, `reviewed`, `planned`, `addressed`. An operator can export the explicit opt-in contact list as a CSV for permitted outreach; no raw quiz answers or journals are exported to Fieldwork.
+- First Circle opt-ins, accounts and invitation counts are different units. None by itself independently confirms a real human actually used the app or liked it.

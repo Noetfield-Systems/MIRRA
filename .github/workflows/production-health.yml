@@ -56,6 +56,16 @@ jobs:
           node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync("/tmp/mirra-growth.json","utf8")); const fields=["windowDays","anonymous_browsers","started_browsers","engaged_browsers","completed_browsers","returning_browsers","sharing_browsers","firstCircleOptIns"]; const safe=Object.fromEntries(fields.map(k=>[k,x[k]??null])); console.log("MIRRA AGGREGATE FUNNEL",JSON.stringify(safe)); console.log("NOTE: Browser identifiers and opt-ins are not independently verified people.");'
 
 
+      - name: Verify Founder Desk is served but APIs remain private
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://mirra-psychology-web-production.up.railway.app"
+          curl --fail --silent --show-error --max-time 20 "$base/founder.html" -o /tmp/mirra-founder.html
+          grep -q 'Founder Desk' /tmp/mirra-founder.html
+          code=$(curl --silent --output /dev/null --write-out '%{http_code}' "$base/api/admin/overview")
+          test "$code" = "401"
+          echo "FOUNDER DESK ACCESS VERIFIED: public HTML, protected data API"
       - name: Verify learning curriculum, question progress API and free entry
         shell: bash
         run: |

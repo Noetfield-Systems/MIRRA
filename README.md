@@ -10,12 +10,20 @@
 
 Editorial psychology, relationship discovery, and thoughtful self-reflection.
 
+## Founder growth operations
+
+- [Public growth analytics](https://mirra-psychology-web-production.up.railway.app/growth.html) show browser IDs, progress by question number and voluntary result feedback aggregated for privacy.
+- [Private MIRRA Founder Desk](https://mirra-psychology-web-production.up.railway.app/founder.html) manages consenting First Circle contacts, private feedback, and improvement statuses. To unlock it, retrieve `MIRRA_ADMIN_TOKEN` from the **MIRRA Railway service → production Variables**. This server-side secret is never included in source, URLs or client storage; rotate it in Railway when needed.
+- [Early tester invitation scripts](docs/FIRST_CIRCLE_OUTREACH_KIT_V1.md), [2027 competitor-informed roadmap](docs/MIRRA_2027_PRODUCT_GROWTH_PLAYBOOK.md), [data and privacy contract](docs/MIRRA_DATA_AND_PROGRESS_CONTRACT.md).
+- Human pilot target: **5 actual voluntary testers**, not browser counters, emails sent or AI simulations. The existing recurring Synthetic User Lab tests ten scripted Chromium personas but cannot prove user demand.
+
 ## Features
 
-- 50-item IPIP Big Five factor markers with published reverse-scoring, plus 9 original eight-question reflection journeys.
+- 50-item IPIP Big Five factor markers with published reverse-scoring, plus 15 distinct original exploratory journeys (nine initial and six new ten-question experiences).
 - MIRRA Together: a two-person invitation experience with comparisons and conversation starters. Guest participation does not require an account.
 - Email + password accounts backed by PostgreSQL, with private reports and journal entries; account export and deletion.
 - Daily reflection prompts, 3 interactive stories, printable result cards, profile history, and personal Mirror.
+- Four educational learning paths with 16 chapters, three clearly fictional illustrated guides, optional device-local points and authenticated private progress synchronization.
 - AI Mirror works when `OPENAI_API_KEY` or `DEEPSEEK_API_KEY` is present. Otherwise it explicitly provides guided prompts, not AI-generated content.
 - Hosted payment links may be configured via `MIRRA_*_LINK`. Checkout buttons remain disabled until configured. Payment unlocking requires Stripe webhook configuration.
 - Original MIRRA experience remains available at `/classic`.
