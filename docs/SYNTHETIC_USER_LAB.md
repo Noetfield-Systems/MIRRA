@@ -1,6 +1,6 @@
 # MIRRA Synthetic User Lab
 
-This is a **developer QA facility**, not a public community and not real user research. Nine scripted scenario personas browse a disposable local clone of the production application using Chromium. They complete assessments, make mistakes, navigate backward, use a keyboard, return for a daily prompt, test image outages, and run both sides of a Together invitation.
+This is a **developer QA facility**, not a public community and not real user research. Ten scripted scenario personas browse a disposable local clone of the production application using Chromium. They complete assessments, make mistakes, navigate backward, use a keyboard, return for a daily prompt, test image outages, and run both sides of a Together invitation.
 
 ## Repeatable evidence
 - Per-persona action completion, browser console and same-origin HTTP errors

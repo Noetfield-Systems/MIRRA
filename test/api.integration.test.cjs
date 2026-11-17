@@ -76,3 +76,21 @@ test('real registration, persistence, invitation, comparison, export, and deleti
  const afterDelete=await call('/api/me','GET');
  assert.equal(afterDelete.body.user,null);
 });
+
+test('anonymous quiz progress is stored without answers and sentiment remains aggregate', {skip:!db},async()=>{
+ const id=randomUUID(),source='synthetic_integration',journey='friendship';
+ const write=async(progress)=>{
+  const r=await fetch(origin+'/api/quiz-progress',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({visitor:id,journey,source,total:10,answered:progress,completed:progress===10})});
+  assert.equal(r.status,202);return r.json();
+ };
+ await write(1);await write(4);await write(10);
+ const r=await fetch(origin+'/api/growth/progress'),body=await r.json();
+ assert.equal(r.status,200);
+ const j=body.journeys.find(x=>x.journey===journey);
+ assert.ok(j);assert.ok(j.completions>=1);assert.ok(Number(j.mean_questions_answered)>=1);
+ assert.equal(body.raw_answers_collected,false);
+ const bad=await fetch(origin+'/api/quiz-progress',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({visitor:randomUUID(),journey,source,total:10,answered:11})});
+ assert.equal(bad.status,400);
+ const fb=await fetch(origin+'/api/feedback',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({area:'questions',text:'I enjoyed this thoughtful reflection.',rating:4,journey,wouldReturn:true})});
+ assert.equal(fb.status,201);
+});

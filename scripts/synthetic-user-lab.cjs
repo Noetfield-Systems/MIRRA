@@ -130,6 +130,24 @@ async function personaCase(browser,persona){
    await before(page,persona.id);
    await safeShot(page,persona.id,'sample_comparison');
    info={sample_comparison_rows:rows,example_marked:/fictional example/i.test(content)};
+  }else if(persona.id==='learning_explorer'){
+   await page.goto(BASE+'/?mirra_qa=1#learn',{waitUntil:'domcontentloaded'});
+   await page.locator('.m-learning-library').waitFor({timeout:12000});
+   await page.locator('[data-m-guide="rowan"]').click();
+   await page.locator('[data-m-lesson="emotions:0"]').click();
+   await page.locator('.m-lesson').waitFor({timeout:8000});
+   await page.locator('[data-m-complete="emotions:0"]').click();
+   const points=await page.evaluate(()=>Object.values(JSON.parse(localStorage.getItem('mirra2:explorationLedger')||'{"awards":{}}').awards).reduce((a,x)=>a+(x.points||0),0));
+   if(points!==10)add(persona.id,'P0','learning_rewards','A new chapter should award ten points once, got '+points,'Repair device-local ledger');
+   await page.locator('[data-m-go="library"]').click();
+   await page.locator('.m-learning-library').waitFor({timeout:8000});
+   await before(page,persona.id);
+   await safeShot(page,persona.id,'learning_room');
+   const quizInfo=await quiz(page,persona,{route:'friendship',questions:10});
+   await page.locator('#m-result-feedback [name="rating"][value="4"]').check();
+   await page.locator('#m-result-feedback button[type="submit"]').click();
+   await page.locator('.m-thankyou').waitFor({timeout:10000});
+   info={...quizInfo,learning_points:points,feedback_submitted:true};
   }else if(persona.id==='evidence_skeptic'){
    info=await quiz(page,persona,{route:'ipip50',questions:50,explicit:true,style:'balanced'});
    const dim=await page.locator('.report-dimension').count();

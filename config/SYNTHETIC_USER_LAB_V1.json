@@ -156,6 +156,24 @@
         "check demo label"
       ],
       "success": "view a labeled fictional example without an external invitation"
+    },
+    {
+      "id": "learning_explorer",
+      "label": "Returning learner exploring educational paths and feedback",
+      "route": "friendship",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "answer_strategy": "varied",
+      "behavior": [
+        "choose an editorial guide",
+        "complete a lesson",
+        "verify one-time reward",
+        "take a new 10-question quiz",
+        "leave optional feedback"
+      ],
+      "success": "Learning room, rewards, results and private feedback all function"
     }
   ],
   "critics": [
