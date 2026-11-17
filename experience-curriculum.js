@@ -873,6 +873,7 @@ const MIRRA_CURRICULUM={
   "guides": [
     {
       "id": "ari",
+      "illustrative_photo": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80",
       "name": "Ari",
       "role": "The curious observer",
       "copy": "A small question can open a large conversation.",
@@ -883,6 +884,7 @@ const MIRRA_CURRICULUM={
     },
     {
       "id": "rowan",
+      "illustrative_photo": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80",
       "name": "Rowan",
       "role": "The thoughtful connector",
       "copy": "Understanding is something we practice together.",
@@ -893,6 +895,7 @@ const MIRRA_CURRICULUM={
     },
     {
       "id": "june",
+      "illustrative_photo": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=900&q=80",
       "name": "June",
       "role": "The steady explorer",
       "copy": "Progress can be gentle, and still be real.",

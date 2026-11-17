@@ -23,7 +23,7 @@
  const rank=()=>{const total=xp();return total>=180?'Steady Explorer':total>=80?'Curious Mind':total>=25?'First Chapter':'New Beginning'};
  const guide=()=>catalog.guides.find(x=>x.id===getLocal('guide','ari'))||catalog.guides[0];
  const safe=(x)=>escapeText(x);
- const portrait=g=>'<span class="m-guide-portrait m-'+g.color+'" aria-hidden="true">'+g.symbol+'</span>';
+ const portrait=g=>'<span class="m-guide-portrait m-'+g.color+'" aria-hidden="true">'+g.symbol+'<img src="'+safe(g.illustrative_photo||'')+'" alt="" loading="lazy" onerror="this.style.display=\'none\'" /></span>';
  const taken=(key)=>!!readLedger().awards[key];
  const completedLessons=()=>Object.keys(readLedger().awards).filter(x=>x.startsWith('lesson:')).length;
  const approved=()=>navigator.webdriver!==true&&!new URL(location.href).searchParams.has('mirra_qa')&&navigator.doNotTrack!=='1'&&!getLocal('analyticsOff',false);
