@@ -1,6 +1,6 @@
 {
   "schema": "mirra.human-connection-growth-program.v1",
-  "version": "2026-11-16.1",
+  "version": "2026-11-16.2-learning-analytics",
   "project": "MIRRA",
   "product_repo": "Noetfield-Systems/MIRRA",
   "founder_authority": "Noetfield-Systems/sina_founder_os",
@@ -19,7 +19,13 @@
     "web_app": "https://mirra-psychology-web-production.up.railway.app",
     "growth_summary": "https://mirra-psychology-web-production.up.railway.app/api/funnel/summary",
     "source_tests": "npm test",
-    "founder_goal": "portfolio/STRATEGIC-EXECUTION-MISSIONS-v1.json"
+    "founder_goal": "portfolio/STRATEGIC-EXECUTION-MISSIONS-v1.json",
+    "curriculum": "experience-curriculum.js",
+    "learning_engine": "experience-addons.js",
+    "question_dropoff": "https://mirra-psychology-web-production.up.railway.app/api/growth/progress",
+    "growth_dashboard": "https://mirra-psychology-web-production.up.railway.app/growth.html",
+    "outreach_copy": "docs/FIRST_CIRCLE_OUTREACH_KIT_V1.md",
+    "research_blueprint": "docs/MIRRA_2027_PRODUCT_GROWTH_PLAYBOOK.md"
   },
   "north_star": "Real people completing a meaningful first reflection, inviting someone voluntarily and returning for another useful experience",
   "targets": {
@@ -41,7 +47,10 @@
     "completed_browsers": "browser identifiers completing quiz",
     "first_circle_optins": "unverified email consent records",
     "verified_volunteers": "people with source-backed voluntary feedback or confirmed real participation",
-    "actual_users": "never infer from HTTP requests or bot traffic"
+    "actual_users": "never infer from HTTP requests or bot traffic",
+    "question_progress": "max question number answered by anonymous browser-journey-day, not raw quiz answers or unique verified humans",
+    "sentiment": "optional subjective 1-5 rating and stated intent, only published in aggregates of at least five",
+    "learning_points": "non-monetary device-local rewards, not a scientific measure or financial asset"
   },
   "current_real_users_verified": null,
   "actual_paid_users_verified": null,
@@ -81,7 +90,8 @@
   "cadence": {
     "observer": "existing Launch Factory 30 minute GitHub workflow",
     "goal": "keep source grounded next action populated on each cycle",
-    "fact": "scheduled observer is not proof of AI code worker commissioning"
+    "fact": "scheduled observer is not proof of AI code worker commissioning",
+    "quality_assurance": "existing MIRRA quality workflow every six hours, ten synthetic Chromium scenarios"
   },
   "roles": [
     {
@@ -403,6 +413,78 @@
       "acceptance": "Backed by sourced consented feedback; classify assumptions separately from confirmed outcomes",
       "status": "DEFINED_NOT_DISPATCHED",
       "claimed_real_outcome": false
+    },
+    {
+      "id": "F17",
+      "title": "Original micro-lesson retention",
+      "priority": 86,
+      "owner": "MIRRA-CONNECTION",
+      "area": "retention",
+      "action": "Evaluate which of 16 original learning chapters users complete, then improve one unengaging chapter from real feedback",
+      "metric": "lesson_completion_and_return",
+      "acceptance": "At least 5 voluntary real testers try a lesson and two return; no synthetic test is counted",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F18",
+      "title": "Question-level dropoff triage",
+      "priority": 86,
+      "owner": "MIRRA-GROWTH",
+      "area": "activation",
+      "action": "Read aggregated per-question progression from /api/growth/progress; fix the earliest source-grounded abandonment bottleneck",
+      "metric": "mean_questions_answered_by_journey",
+      "acceptance": "Observe real browser-journey-day step reach without storing answers and test a measurable change",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F19",
+      "title": "Subjective feedback learning loop",
+      "priority": 86,
+      "owner": "MIRRA-RESEARCH",
+      "area": "insight",
+      "action": "Compare genuine opt-in usefulness and exit-reason feedback with behavioral completion; do not infer preferences from AI QA",
+      "metric": "usefulness_rating_n5_plus",
+      "acceptance": "Five or more voluntary ratings per experience before publishing a mean; record exact qualitative themes privately",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F20",
+      "title": "Editorial guide efficacy",
+      "priority": 86,
+      "owner": "MIRRA-DESIGN",
+      "area": "retention",
+      "action": "Test three openly fictional editorial guide personalities for clarity, appeal and respectful language",
+      "metric": "guide_assisted_return",
+      "acceptance": "Five real voluntary testers compare preference; avoid fake human avatars and popularity claims",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F21",
+      "title": "Secure private progress continuity",
+      "priority": 86,
+      "owner": "MIRRA-CONNECTION",
+      "area": "identity",
+      "action": "Explore opt-in account sync for nonmonetary local progress while preserving anonymous entry",
+      "metric": "progress_restore",
+      "acceptance": "Prove separate device log-in restore, export and delete behavior; avoid exporting raw psychological details to Fieldwork",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
+    },
+    {
+      "id": "F22",
+      "title": "Founder first-five outreach verification",
+      "priority": 86,
+      "owner": "MIRRA-GROWTH",
+      "area": "acquisition",
+      "action": "Use existing Fieldwork to send relevant personal invitations and obtain source-backed five human testers",
+      "metric": "verified_real_testers",
+      "acceptance": "Real recipients voluntary replies and/or signed feedback; never count an email send, bot view or test account as user",
+      "status": "DEFINED_NOT_DISPATCHED",
+      "claimed_real_outcome": false
     }
   ],
   "research_segments": [
@@ -442,7 +524,9 @@
     "on_no_first_answer": "inspect share deep link, script, first screen and above fold CTA",
     "on_low_completion": "audit question length, answer feedback, mobile rendering",
     "on_no_share": "improve report usefulness and guest Together invitations",
-    "on_no_return": "test daily question relevance and follow up when consented"
+    "on_no_return": "test daily question relevance and follow up when consented",
+    "on_new_course_without_retention": "Do not add more lessons blindly. Collect opt-in first-session feedback and observed returns before expanding.",
+    "on_feedback_below_3_of_5": "Audit relevance, specificity and actual usefulness of results before creating new quizzes."
   },
   "output_requirements": [
     "source_ref",
@@ -478,5 +562,46 @@
     "real_user_validation_required": true,
     "company_os_handoff": "M22 source-backed workstreams, no new agent queue",
     "agent_runtime_proof": "NO_NEW_CODING_AGENT_COMMISSIONED_BY_BROWSER_TEST"
-  }
+  },
+  "product_growth_release": {
+    "theme": "living-personality-and-connection",
+    "features": [
+      "6 additional 10-question exploratory journeys",
+      "16 original educational micro-lessons",
+      "3 visibly fictional editorial guides",
+      "private non-monetary local reflection points",
+      "daily optional missions",
+      "per-question anonymous progress rollup",
+      "optional post-result rating and early-exit feedback",
+      "private Together invite plus clearly fictional solo demo"
+    ],
+    "implementation_source": "https://github.com/Noetfield-Systems/MIRRA",
+    "scope": "Product implemented; no real human satisfaction outcome asserted"
+  },
+  "next_experiments": [
+    {
+      "id": "X01",
+      "hypothesis": "A contextual first question will increase real first-answer activation",
+      "primary_metric": "first_answer_rate",
+      "prerequisite": "at least five source-corroborated human testers"
+    },
+    {
+      "id": "X02",
+      "hypothesis": "Shared comparison creates more voluntary invites than solo results",
+      "primary_metric": "completed_two_person_invites",
+      "prerequisite": "explicit friend invitation, no fake users"
+    },
+    {
+      "id": "X03",
+      "hypothesis": "A short personalized lesson makes returning more desirable than a generic daily prompt",
+      "primary_metric": "observed_d1_d7_return",
+      "prerequisite": "at least 25 distinct, plausibly human browser journeys"
+    },
+    {
+      "id": "X04",
+      "hypothesis": "Practical next steps increase subjective result usefulness",
+      "primary_metric": "opt_in_result_rating",
+      "prerequisite": "at least five voluntary ratings per compared journey"
+    }
+  ]
 }
