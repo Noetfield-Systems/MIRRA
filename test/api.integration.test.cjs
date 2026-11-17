@@ -9,7 +9,7 @@ const origin='http://127.0.0.1:'+port;
 let child,log='';
 before(async()=>{
  if(!db)return;
- child=spawn(process.execPath,['server.js'],{env:{...process.env,DATABASE_URL:db,PORT:String(port),NODE_ENV:'test',OPENAI_API_KEY:'',DEEPSEEK_API_KEY:''},stdio:['ignore','pipe','pipe']});
+ child=spawn(process.execPath,['server.js'],{env:{...process.env,DATABASE_URL:db,PORT:String(port),NODE_ENV:'test',OPENAI_API_KEY:'',DEEPSEEK_API_KEY:'',MIRRA_ADMIN_TOKEN:'mirra-local-integration-token-testing-2026'},stdio:['ignore','pipe','pipe']});
  child.stderr.on('data',d=>log+=d.toString());
  child.stdout.on('data',d=>log+=d.toString());
  for(let i=0;i<140;i++){
@@ -101,4 +101,41 @@ test('anonymous quiz progress is stored without answers and sentiment remains ag
  assert.equal(bad.status,400);
  const fb=await fetch(origin+'/api/feedback',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({area:'questions',text:'I enjoyed this thoughtful reflection.',rating:4,journey,wouldReturn:true})});
  assert.equal(fb.status,201);
+});
+
+test('private founder desk requires authorized bearer and supports feedback triage without sharing quiz answers',{skip:!db},async()=>{
+ const token='mirra-local-integration-token-testing-2026';
+ const req=async(path,opts={})=>{
+  const r=await fetch(origin+path,opts);
+  return {status:r.status,body:await r.json().catch(()=>({}))};
+ };
+ const noToken=await req('/api/admin/overview');
+ assert.equal(noToken.status,401,'Founder's private counts must not be public');
+ const wrong=await req('/api/admin/feedback',{headers:{authorization:'Bearer a-random-wrong-token-value-2026'}});
+ assert.equal(wrong.status,401,'Wrong credential must be rejected');
+ const auth={authorization:'Bearer '+token};
+ const overview=await req('/api/admin/overview',{headers:auth});
+ assert.equal(overview.status,200,JSON.stringify(overview.body));
+ assert.equal(overview.body.verified_human_users,null);
+ assert.ok(Number.isInteger(overview.body.registered_accounts));
+ const privateFeedback=await req('/api/admin/feedback',{headers:auth});
+ assert.equal(privateFeedback.status,200);
+ assert.ok(Array.isArray(privateFeedback.body.items));
+ const firstCircle=await req('/api/admin/first-circle',{headers:auth});
+ assert.equal(firstCircle.status,200);
+ assert.ok(Array.isArray(firstCircle.body.items));
+ const fb=await req('/api/feedback',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({area:'questions',text:'This early test helped me notice where the copy feels too long.',rating:3,journey:'friendship',wouldReturn:true})});
+ assert.equal(fb.status,201);
+ const listed=await req('/api/admin/feedback',{headers:auth});
+ const found=listed.body.items.find(x=>x.message==='This early test helped me notice where the copy feels too long.');
+ assert.ok(found?.id,'Founder can read source feedback');
+ const triage=await req('/api/admin/feedback/'+found.id+'/status',{method:'POST',headers:{...auth,'content-type':'application/json'},body:JSON.stringify({status:'planned'})});
+ assert.equal(triage.status,200);
+ assert.equal(triage.body.status,'planned');
+ const after=await req('/api/admin/feedback',{headers:auth});
+ assert.equal(after.body.items.find(x=>x.id===found.id).status,'planned');
+ const tamper=await req('/api/admin/feedback/'+found.id+'/status',{method:'POST',headers:{...auth,'content-type':'application/json'},body:JSON.stringify({status:'secret_unreviewed'})});
+ assert.equal(tamper.status,400);
+ const unauthorizedMutation=await req('/api/admin/feedback/'+found.id+'/status',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({status:'addressed'})});
+ assert.equal(unauthorizedMutation.status,401);
 });
