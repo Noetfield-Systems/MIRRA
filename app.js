@@ -57,7 +57,7 @@ async function track(kind,journey='general'){
  // Scripted QA is not a person. Exclude it from all product metrics.
  if(navigator.webdriver===true||new URL(location.href).searchParams.has('mirra_qa'))return;
  if(navigator.doNotTrack==='1'||getLocal('analyticsOff',false)===true)return;
- if(!['landing_view','quiz_started','quiz_first_answer','quiz_completed','invite_created','invite_completed','daily_completed','share_clicked','return_visit','story_started'].includes(kind))return;
+ if(!['landing_view','quiz_started','quiz_first_answer','quiz_completed','invite_created','invite_completed','daily_completed','share_clicked','return_visit','story_started','lesson_completed'].includes(kind))return;
  try{await request('/api/funnel',{method:'POST',json:{visitor:trackingId(),kind,journey,source:state.source}})}catch{}
 }
 function shareExperience(journey='relationships'){
@@ -75,7 +75,7 @@ const chosen=path?.[1]||url.searchParams.get('start');state.source=(url.searchPa
 const previousVisit=getLocal('lastVisit',null);const today=localDay();if(previousVisit&&previousVisit!==today)track('return_visit');putLocal('lastVisit',today);
 if(code){state.inviteCode=code;state.route='invite';await fetchInvite()}
 else if(chosen&&(chosen==='ipip50'||Object.hasOwn(genres,chosen))){state.journey=chosen;state.route='quiz';state.answers=[];state.idx=0;track('quiz_started',chosen)}
-else if(['daily','community','discover','together','stories','journal','account','science'].includes(location.hash.slice(1))){state.route=location.hash.slice(1)}
+else if(['daily','community','discover','together','stories','journal','account','science','learn'].includes(location.hash.slice(1))){state.route=location.hash.slice(1)}
 render();track('landing_view')}
 
 function route(name){state.route=name;window.scrollTo({top:0,behavior:'instant'});const url=new URL(location.href);url.searchParams.delete('invite');history.replaceState({},'',(url.pathname.startsWith('/q/')?'/':url.pathname)+(name!=='home'?'#'+name:''));render()}

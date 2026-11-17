@@ -106,7 +106,7 @@ async function api(req,res,url){const p=url.pathname,m=req.method;
  if(m==='POST'&&p==='/api/funnel'){
   // Disposable CI database: synthetic actors never become audience metrics.
   if(process.env.MIRRA_SYNTHETIC_LAB==='1')return send(res,202,{accepted:false,synthetic:true});
-  const d=await parseBody(req);const kinds=['landing_view','quiz_started','quiz_first_answer','quiz_completed','invite_created','invite_completed','daily_completed','share_clicked','return_visit','story_started'];
+  const d=await parseBody(req);const kinds=['landing_view','quiz_started','quiz_first_answer','quiz_completed','invite_created','invite_completed','daily_completed','share_clicked','return_visit','story_started','lesson_completed'];
   const visitor=clean(d.visitor,40),kind=clean(d.kind,40),journey=clean(d.journey,40),source=clean(d.source,40);
   if(!/^[a-f0-9-]{36}$/.test(visitor)||!kinds.includes(kind)||!(/^[a-z0-9_-]{1,40}$/i.test(journey))||!(/^[a-z0-9_-]{0,40}$/i.test(source)))return bad(res,400,'Invalid event');
   await pool.query("DELETE FROM mirra_funnel_events WHERE created_at < now()-interval '30 days'").catch(()=>{});
