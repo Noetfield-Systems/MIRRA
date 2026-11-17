@@ -17,6 +17,13 @@ const sha=(s)=>crypto.createHash('sha256').update(s).digest('hex');
 const clean=(s,n=300)=>typeof s==='string'?s.trim().slice(0,n):'';
 const bad=(res,code,reason)=>send(res,code,{error:reason});
 const send=(res,code,obj)=>{res.writeHead(code,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'});res.end(JSON.stringify(obj))};
+function adminAllowed(req){
+ const secret=process.env.MIRRA_ADMIN_TOKEN||'';
+ const authorization=String(req.headers.authorization||'');
+ const token=authorization.startsWith('Bearer ')?authorization.slice(7):'';
+ if(secret.length<24||token.length!==secret.length)return false;
+ return crypto.timingSafeEqual(Buffer.from(sha(secret),'hex'),Buffer.from(sha(token),'hex'));
+}
 function cookie(req){const x=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('mirra_session='));return x?x.slice('mirra_session='.length):''}
 function setSession(res,value,seconds){res.setHeader('set-cookie','mirra_session='+value+'; Path=/; HttpOnly; SameSite=Lax; Max-Age='+seconds+(prod?'; Secure':''))}
 async function parseBody(req){const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>64*1024)throw new Error('Body too large');chunks.push(chunk)}return chunks.length?JSON.parse(Buffer.concat(chunks).toString('utf8')):{}}
@@ -43,6 +50,8 @@ async function initialize(){
  ALTER TABLE mirra_feedback ADD COLUMN IF NOT EXISTS rating smallint;
  ALTER TABLE mirra_feedback ADD COLUMN IF NOT EXISTS journey text;
  ALTER TABLE mirra_feedback ADD COLUMN IF NOT EXISTS would_return boolean;
+ ALTER TABLE mirra_feedback ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'new';
+ ALTER TABLE mirra_feedback ADD COLUMN IF NOT EXISTS reviewed_at timestamptz;
  `);
 }
 async function findUser(req){if(!pool)return null;const tok=cookie(req);if(!tok)return null;const q=await pool.query('SELECT u.id,u.email,u.display_name,u.created_at FROM mirra_sessions s JOIN mirra_users u ON s.user_id=u.id WHERE s.token_hash=$1 AND s.expires_at>now()',[sha(tok)]);return q.rows[0]||null}
@@ -103,6 +112,38 @@ async function api(req,res,url){const p=url.pathname,m=req.method;
  if(m==='GET'&&p==='/api/health')return send(res,200,{ok:true,service:'MIRRA 2.0',database:Boolean(pool),ai:Boolean(process.env.OPENAI_API_KEY||process.env.DEEPSEEK_API_KEY)});
  if(m==='GET'&&p==='/api/config')return send(res,200,{accounts:Boolean(pool),ai:Boolean(process.env.OPENAI_API_KEY||process.env.DEEPSEEK_API_KEY),products:{deepDive:process.env.MIRRA_DEEP_DIVE_LINK||null,plus:process.env.MIRRA_PLUS_LINK||null,together:process.env.MIRRA_TOGETHER_LINK||null}});
  if(!pool)return bad(res,503,'Account service is not configured.');
+ // The founder inbox and private feedback are intentionally NOT public metrics.
+ if(p.startsWith('/api/admin/')){
+  if(!adminAllowed(req))return bad(res,401,'Founder access required.');
+  if(m==='GET'&&p==='/api/admin/overview'){
+   const [accounts,optIns,feedback,guestInvites,paired]=await Promise.all([
+    pool.query('SELECT count(*)::int n FROM mirra_users'),
+    pool.query('SELECT count(*)::int n FROM mirra_first_circle'),
+    pool.query('SELECT count(*)::int n FROM mirra_feedback'),
+    pool.query('SELECT count(*)::int n FROM mirra_guest_invites'),
+    pool.query('SELECT count(*)::int n FROM mirra_guest_invites WHERE guest_answers IS NOT NULL')
+   ]);
+   return send(res,200,{registered_accounts:accounts.rows[0].n,first_circle_opt_ins:optIns.rows[0].n,private_feedback_submissions:feedback.rows[0].n,guest_invites_created:guestInvites.rows[0].n,guest_invites_completed:paired.rows[0].n,verified_human_users:null,warning:'Accounts and browser events are not independently verified people.'});
+  }
+  if(m==='GET'&&p==='/api/admin/feedback'){
+   const q=await pool.query('SELECT id,area,message,journey,rating,would_return,status,created_at,reviewed_at FROM mirra_feedback ORDER BY created_at DESC LIMIT 100');
+   return send(res,200,{items:q.rows});
+  }
+  if(m==='GET'&&p==='/api/admin/first-circle'){
+   const q=await pool.query('SELECT email,interest,source,consent_at FROM mirra_first_circle ORDER BY consent_at DESC LIMIT 100');
+   return send(res,200,{items:q.rows,notice:'Consent to MIRRA updates is not evidence of actual use. Contact only within their stated consent.'});
+  }
+  const match=p.match(/^\/api\/admin\/feedback\/([a-f0-9-]{36})\/status$/);
+  if(m==='POST'&&match){
+   const d=await parseBody(req);
+   if(!['new','reviewed','planned','addressed'].includes(d.status))return bad(res,400,'Unknown feedback status');
+   const q=await pool.query("UPDATE mirra_feedback SET status=$1,reviewed_at=CASE WHEN $1='new' THEN NULL ELSE now() END WHERE id=$2 RETURNING id,status",[d.status,match[1]]);
+   if(!q.rowCount)return bad(res,404,'Feedback not found');
+   return send(res,200,q.rows[0]);
+  }
+  return bad(res,404,'Unknown founder route');
+ }
+
  // Anonymous, privacy-conscious product metrics: an app-generated random browser ID; no IP, email or answers are persisted.
  if(m==='POST'&&p==='/api/funnel'){
   // Disposable CI database: synthetic actors never become audience metrics.
