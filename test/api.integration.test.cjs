@@ -39,6 +39,13 @@ test('real registration, persistence, invitation, comparison, export, and deleti
  session=reg.cookie.split(';')[0];
  const me=await call('/api/me');
  assert.equal(me.body.user.email,email);
+ const progress=await call('/api/progress/ledger','POST',{guide:'rowan',awards:{'lesson:emotions:0':{points:10,at:new Date().toISOString()}}});
+ assert.equal(progress.status,200,JSON.stringify(progress.body));
+ assert.equal(progress.body.awards['lesson:emotions:0'].points,10);
+ const privateProgress=await call('/api/progress/ledger');
+ assert.equal(privateProgress.body.guide,'rowan');
+ const invalidProgress=await call('/api/progress/ledger','POST',{guide:'rowan',awards:{'lesson:emotions:1':{points:900,at:new Date().toISOString()}}});
+ assert.equal(invalidProgress.status,400);
  const sample=await call('/api/reports','POST',{journey:'ipip50',answers:Array(50).fill(3)});
  assert.equal(sample.status,201,JSON.stringify(sample.body));
  assert.equal(sample.body.score.dimensions.length,5);
@@ -71,6 +78,7 @@ test('real registration, persistence, invitation, comparison, export, and deleti
  assert.equal(exported.status,200);
  assert.equal(exported.body.reports.length,1);
  assert.equal(exported.body.journal.length,1);
+ assert.equal(exported.body.learning.guide,'rowan');
  const deleted=await call('/api/account','DELETE',{});
  assert.equal(deleted.status,200);
  const afterDelete=await call('/api/me','GET');

@@ -6,7 +6,7 @@
 | Registered reports / raw answers | PostgreSQL `mirra_reports`, scoped to authenticated user | Account owner via authenticated app/API | Stored to support their personal history; not shared with the CRM |
 | Guest Together answers | PostgreSQL invitation record, private bearer-link comparison | Anyone possessing private invitation link after completion | A private link is not a public profile; do not post link publicly |
 | Daily moods and reflection | Guest localStorage; optional signed-in journal copy | The person with the device / their authenticated account | Do not upload to Analytics |
-| Reflection Points and lessons | Browser localStorage `mirra2:explorationLedger` | The device user | Nonmonetary, not synchronized cross-device yet; not a scientific score |
+| Reflection Points and lessons | Browser localStorage; optional signed-in sync in PostgreSQL `mirra_learning_progress` | The device user / authenticated account owner | Nonmonetary, server-validated point categories; guest data stays on device until signing in |
 | Anonymous funnel events | PostgreSQL `mirra_funnel_events` | Aggregates through Growth dashboard | Browser-ID unique per journey/day, 30-day cleanup; not verified humans |
 | Furthest question position | PostgreSQL `mirra_quiz_progress` | Aggregates through Growth dashboard | No raw answers, name, email or psychological trait; browser-journey-day unit; 30-day cleanup |
 | Private result usefulness | PostgreSQL `mirra_feedback` | Aggregated rating shown only if five or more submissions | Explicit optional statement, never a clinical measure |
