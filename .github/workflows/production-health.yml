@@ -54,3 +54,31 @@ jobs:
           base="https://mirra-psychology-web-production.up.railway.app"
           curl --max-time 20 --fail --silent --show-error "$base/api/funnel/summary" -o /tmp/mirra-growth.json
           node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync("/tmp/mirra-growth.json","utf8")); const fields=["windowDays","anonymous_browsers","started_browsers","engaged_browsers","completed_browsers","returning_browsers","sharing_browsers","firstCircleOptIns"]; const safe=Object.fromEntries(fields.map(k=>[k,x[k]??null])); console.log("MIRRA AGGREGATE FUNNEL",JSON.stringify(safe)); console.log("NOTE: Browser identifiers and opt-ins are not independently verified people.");'
+
+
+      - name: Verify learning curriculum, question progress API and free entry
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://mirra-psychology-web-production.up.railway.app"
+          for attempt in $(seq 1 18); do
+            if curl --max-time 15 --fail --silent --show-error "$base/experience-curriculum.js" -o /tmp/mirra-curriculum.js &&
+               curl --max-time 15 --fail --silent --show-error "$base/experience-addons.js" -o /tmp/mirra-learning.js &&
+               curl --max-time 15 --fail --silent --show-error "$base/growth-v2.js" -o /tmp/mirra-growth-extended.js &&
+               curl --max-time 15 --fail --silent --show-error "$base/api/growth/progress" -o /tmp/mirra-question-progress.json &&
+               curl --max-time 15 --fail --silent --show-error "$base/q/friendship?utm_source=ci_probe" -o /tmp/mirra-friendship.html &&
+               node - <<'NODE'
+          const fs=require('fs');
+          const c=fs.readFileSync('/tmp/mirra-curriculum.js','utf8');
+          const add=fs.readFileSync('/tmp/mirra-learning.js','utf8');
+          const html=fs.readFileSync('/tmp/mirra-friendship.html','utf8');
+          const metrics=JSON.parse(fs.readFileSync('/tmp/mirra-question-progress.json','utf8'));
+          if(!c.includes('MIRRA_CURRICULUM')||!add.includes('reflection points')||!html.includes('/experience-curriculum.js')||metrics.raw_answers_collected!==false||!Array.isArray(metrics.journeys))process.exit(1);
+          console.log('MIRRA NEW GROWTH FEATURES VERIFIED',JSON.stringify({curriculum:c.length,learning:add.length,questions:metrics.journeys.length,noRawAnswers:metrics.raw_answers_collected}));
+          NODE
+            then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "MIRRA NEW FEATURE READBACK FAILED"; exit 1
