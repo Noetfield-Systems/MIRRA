@@ -50,6 +50,12 @@ async function quiz(page,persona,{route,questions,explicit=false,style='varied'}
  await page.goto(BASE+(route==='together'?'/?mirra_qa=1#together':'/q/'+route+'?mirra_qa=1&utm_source=synthetic_qa'),{waitUntil:'domcontentloaded',timeout:25000});
  if(route==='together'){await page.locator('[data-action="start-together"]').first().click();}
  await waitQuestion(page,0);
+ if(persona.id==='impatient_mobile'){
+  await page.locator('[data-m-pause]').first().click();
+  await page.locator('#m-exit-survey [name="reason"][value="0"]').check();
+  await page.locator('#m-exit-survey button[type="submit"]').click();
+  await page.locator('.m-exit-thanks').waitFor({timeout:10000});
+ }
  const beforeSize=await before(page,persona.id);
  if(persona.id==='curious_newcomer'||persona.id==='evidence_skeptic')await safeShot(page,persona.id,'first_question');
  for(let i=0;i<questions;i++){
