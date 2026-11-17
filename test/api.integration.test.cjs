@@ -110,7 +110,7 @@ test('private founder desk requires authorized bearer and supports feedback tria
   return {status:r.status,body:await r.json().catch(()=>({}))};
  };
  const noToken=await req('/api/admin/overview');
- assert.equal(noToken.status,401,'Founder's private counts must not be public');
+ assert.equal(noToken.status,401,'Private founder counts must not be public');
  const wrong=await req('/api/admin/feedback',{headers:{authorization:'Bearer a-random-wrong-token-value-2026'}});
  assert.equal(wrong.status,401,'Wrong credential must be rejected');
  const auth={authorization:'Bearer '+token};
