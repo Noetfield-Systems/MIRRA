@@ -103,6 +103,15 @@
   return '<section class="container m-sharekit"><div><span class="eyebrow">INVITE SOMEONE WHO MATTERS</span><h2>An honest invitation.<br><em>Not a sales pitch.</em></h2><p>Choose a message, send it to someone who might enjoy reflecting, and ask for frank feedback. Every invitation is voluntary.</p></div><div class="m-sharekit-actions">'+
   Object.entries(invitationTemplates).map(([k,v])=>'<button class="m-sharekit-btn" data-m-message="'+k+'"><strong>'+safe(k==='friend'?'Invite a friend':k==='partner'?'Share with a partner':'Ask a creator to test')+'</strong><span>Copy the short English invitation ↗</span></button>').join('')+'</div></section>';
  }
+
+ function exitPulse(){
+  return '<div class="m-exit-pulse"><button type="button" class="btn-link" data-m-pause="1">Not finding what you hoped for? Tell us why.</button>'+
+  '<div id="m-exit-panel" hidden><form id="m-exit-survey"><span class="eyebrow">ONE QUICK QUESTION</span>'+
+  '<h3>What would make this experience better?</h3>'+
+  '<div class="m-exit-reasons">'+
+  ['Questions feel too long','The topic is not relevant','The wording is confusing','I want something different'].map((v,i)=>'<label><input type="radio" name="reason" value="'+i+'" required><span>'+v+'</span></label>').join('')+'</div>'+
+  '<button type="submit" class="btn dark">Send private feedback ↗</button><p class="privacy-note">No answers, contact details or account are attached to this note.</p></form></div></div>';
+ }
  render=function(){
   if(state.route==='learn'){
    refreshNav();app.innerHTML=state.learningSelection?chapterView(state.learningSelection):libraryView();
@@ -112,6 +121,9 @@
    return;
   }
   originalRender();
+  if(state.route==='quiz'){
+   const note=app.querySelector('.privacy-note');if(note)note.insertAdjacentHTML('afterend',exitPulse());
+  }
   if(state.route==='home'){
    const hero=app.querySelector('.hero');if(hero)hero.insertAdjacentHTML('afterend',ribbon());
    const features=app.querySelector('.experience-pick');if(features)features.insertAdjacentHTML('afterend',weeklyMissions());
@@ -142,9 +154,10 @@
   }
  };
  document.addEventListener('click',e=>{
-  const el=e.target.closest('[data-m-lesson],[data-m-guide],[data-m-complete],[data-m-go],[data-m-message]');
+  const el=e.target.closest('[data-m-lesson],[data-m-guide],[data-m-complete],[data-m-go],[data-m-message],[data-m-pause]');
   if(!el)return;
   e.preventDefault();
+  if(el.dataset.mPause!==undefined){const panel=document.getElementById('m-exit-panel');if(panel){panel.hidden=!panel.hidden;if(!panel.hidden)panel.scrollIntoView({block:'nearest',behavior:'smooth'});}return;}
   if(el.dataset.mLesson){
    const [key,indexStr]=el.dataset.mLesson.split(':'),index=Number(indexStr);
    if(!catalog.lessons[key]?.lessons[index])return;
@@ -168,6 +181,17 @@
   }
  });
  document.addEventListener('submit',async e=>{
+  if(e.target.id==='m-exit-survey'){
+   e.preventDefault();const form=e.target,data=Object.fromEntries(new FormData(form));
+   const labels=['Questions feel too long','The topic is not relevant','The wording is confusing','I want something different'];
+   const index=Number(data.reason);
+   if(!Number.isInteger(index)||index<0||index>=labels.length)return toast('Please choose one reason.');
+   try{
+    await request('/api/feedback',{method:'POST',json:{area:'questions',journey:state.journey||'general',text:'Early-exit feedback: '+labels[index]+'.'}});
+    form.innerHTML='<p class="m-exit-thanks">Thank you. Your suggestion will help us make MIRRA better.</p>';
+   }catch(error){toast(error.message||'Could not send feedback');}
+   return;
+  }
   if(e.target.id!=='m-result-feedback')return;
   e.preventDefault();const form=e.target,data=Object.fromEntries(new FormData(form));
   const rating=Number(data.rating||0);
