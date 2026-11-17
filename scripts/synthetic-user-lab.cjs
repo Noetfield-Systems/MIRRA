@@ -24,6 +24,11 @@ async function before(page,id){
  const w=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth,height:document.documentElement.scrollHeight,title:document.title,language:document.documentElement.lang}));
  if(w.scroll>w.client+2)add(id,'P0','horizontal_overflow','Scroll width '+w.scroll+' exceeds viewport '+w.client,'Fix intrinsic sizing at this viewport');
  if(w.language!=='en')add(id,'P2','language','Document lang='+w.language,'Confirm English-first document semantics');
+ if((page.viewportSize()?.width||1200)<=430&&await page.locator('.report-actions .btn').count()){
+  const widths=await page.locator('.report-actions .btn').evaluateAll(nodes=>nodes.map(n=>Math.round(n.getBoundingClientRect().width)));
+  const tiny=widths.filter(w=>w<180);
+  if(tiny.length)add(id,'P0','narrow_result_actions',tiny.length+' result action buttons under 180px ('+widths.join(',')+')','Stack report action buttons at full phone width');
+ }
  const answerButtons=await page.locator('.answer').count();
  if(answerButtons){
   const h=await page.locator('.answer').first().evaluate(el=>Math.round(el.getBoundingClientRect().height));
