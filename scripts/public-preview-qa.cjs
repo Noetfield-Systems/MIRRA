@@ -11,7 +11,10 @@ async function step(page,index,choice){
 }
 async function checkSize(page,label){
  const x=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth}));
- assert.ok(x.scroll<=x.client+2,label+' horizontal overflow: '+JSON.stringify(x));
+ if(x.scroll>x.client+2){
+  const offenders=await page.evaluate(()=>[...document.querySelectorAll('*')].filter(n=>n.getBoundingClientRect().right>document.documentElement.clientWidth+2||n.getBoundingClientRect().left< -2).slice(0,12).map(n=>({tag:n.tagName,cls:String(n.className).slice(0,85),right:Math.round(n.getBoundingClientRect().right),left:Math.round(n.getBoundingClientRect().left)})));
+  throw Error(label+' horizontal overflow: '+JSON.stringify({x,offenders}));
+ }
 }
 async function main(){
  const health=await (await fetch(BASE+'/api/health')).json();
