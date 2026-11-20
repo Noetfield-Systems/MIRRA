@@ -7,6 +7,20 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
+      - name: Diagnose public DNS, TLS and access without Vercel login
+        shell: bash
+        run: |
+          set -euo pipefail
+          host="mirra-psychology.vercel.app"
+          getent ahostsv4 "$host" | head -5
+          curl --retry 2 --retry-delay 2 --max-time 25 --location --fail --show-error --silent --dump-header /tmp/mirra-public-headers "https://$host/" -o /tmp/mirra-public-check.html
+          sed -n '1,17p' /tmp/mirra-public-headers
+          grep -q 'MIRRA' /tmp/mirra-public-check.html
+          if grep -qiE 'Vercel Authentication|Login to Vercel|Deployment Protection|Authentication Required' /tmp/mirra-public-check.html; then
+            echo "UNEXPECTED_DEPLOYMENT_PROTECTION"
+            exit 1
+          fi
+          echo "MIRRA_ANONYMOUS_EXTERNAL_ACCESS_PASS"
       - name: Verify public Vercel pages, assets and guest API
         shell: bash
         run: |
