@@ -14,6 +14,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/premium.css">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="color-scheme" content="light">
+<meta property="og:site_name" content="MIRRA">
+<meta property="og:locale" content="en_CA">
 <meta property="og:type" content="website"><meta property="og:image" content="https://mirra-psychology.vercel.app/assets/portrait.webp"><meta name="twitter:card" content="summary_large_image"></head>
 <body>
 <a class="skip" href="#app">Skip to content</a>
@@ -25,6 +30,13 @@
   <div class="header-end"><span class="header-label">THE ART OF BEING HUMAN</span><button class="outline-small" data-route="guestSpace" id="account-action">My space <span>↗</span></button><button class="menu-toggle" id="menu-toggle" aria-label="Open navigation" aria-expanded="false"><span></span><span></span></button></div>
 </header>
 <nav id="mobile-nav" class="mobile-nav" hidden aria-label="Mobile navigation"><button data-route="discover">Discover</button><button data-route="together">Together</button><button data-route="stories">Stories</button><button data-route="learn">Learn</button><button data-route="daily">Today</button><button data-route="community">Community</button><button data-route="journal">Journal</button><button data-route="guestSpace">My space</button></nav>
+<nav class="bottom-nav" aria-label="Mobile quick navigation">
+  <button data-route="discover" aria-label="Discover experiences"><span aria-hidden="true">✳</span><small>Explore</small></button>
+  <button data-route="together" aria-label="Explore with someone"><span aria-hidden="true">◎</span><small>Together</small></button>
+  <button data-route="daily" aria-label="Daily reflection"><span aria-hidden="true">☼</span><small>Today</small></button>
+  <button data-route="journal" aria-label="Open your private journal"><span aria-hidden="true">▤</span><small>Journal</small></button>
+  <button data-route="guestSpace" aria-label="Open your personal space"><span aria-hidden="true">◉</span><small>My space</small></button>
+</nav>
 <main id="app" tabindex="-1"><section class="loading"><span class="eyebrow">MIRRA</span><h1>Getting your space ready.</h1></section></main>
 <footer class="footer"><div><span class="footer-brand">MIRRA</span><p>A thoughtful space for understanding yourself<br>and the people you share life with.</p></div><div><span class="eyebrow">EXPLORE</span><button data-route="discover">Explore free experiences</button><button data-route="together">Invite a friend</button><button data-route="daily">Today’s reflection</button><button data-route="community">Community and connection</button></div><div><span class="eyebrow">YOUR SPACE</span><button data-route="journal">Private journal</button><button data-route="guestSpace">Account and privacy</button><a href="/classic">Original assessment library ↗</a></div><div class="footer-bottom"><span>© 2026 MIRRA. All rights reserved.</span><span>Begin without signing up. Your reflections remain yours.</span><a href="https://ipip.ori.org/new_ipip-50-item-scale.htm" target="_blank" rel="noreferrer">IPIP reference ↗</a></div></footer>
 <div id="toast" role="status" aria-live="polite"></div>
