@@ -4,16 +4,16 @@
 
 ## Try MIRRA — free, no account required
 
-**[Start with a three-minute reflection](https://mirra-psychology-web-production.up.railway.app/q/emotions?utm_source=github_readme)** · [Explore relationships](https://mirra-psychology-web-production.up.railway.app/q/relationships?utm_source=github_readme) · [Visit the complete app](https://mirra-psychology-web-production.up.railway.app/?utm_source=github_readme)
+**[Start with a three-minute reflection](https://mirra-psychology.vercel.app/q/emotions?utm_source=github_readme)** · [Explore relationships](https://mirra-psychology.vercel.app/q/relationships?utm_source=github_readme) · [Visit the complete app](https://mirra-psychology.vercel.app/?utm_source=github_readme)
 
-**First Circle:** We are inviting the first five people to try one experience and give candid feedback about clarity, quality and whether they would return. [Read the invitation](https://github.com/Noetfield-Systems/MIRRA/issues/1) or choose **Community → Send feedback** in the app. No purchase, account or public personal disclosure is needed.
+**First Circle:** Our immediate goal is five actual voluntary testers. Email opt-in and server-side feedback are paused in the no-database preview; invitations are sent manually and no user count is inferred from browser activity. [Read the invitation](https://github.com/Noetfield-Systems/MIRRA/issues/1) or choose **Community → Send feedback** in the app. No purchase, account or public personal disclosure is needed.
 
 Editorial psychology, relationship discovery, and thoughtful self-reflection.
 
 ## Founder growth operations
 
-- [Public growth analytics](https://mirra-psychology-web-production.up.railway.app/growth.html) show browser IDs, progress by question number and voluntary result feedback aggregated for privacy.
-- [Private MIRRA Founder Desk](https://mirra-psychology-web-production.up.railway.app/founder.html) manages consenting First Circle contacts, private feedback, and improvement statuses. To unlock it, retrieve `MIRRA_ADMIN_TOKEN` from the **MIRRA Railway service → production Variables**. This server-side secret is never included in source, URLs or client storage; rotate it in Railway when needed.
+- Growth analytics require connected PostgreSQL and are unavailable in Vercel guest-preview mode; do not interpret browser-local visits as actual users.
+- Founder Desk data and First Circle email collection remain disabled without PostgreSQL and `MIRRA_ADMIN_TOKEN`; the public guest preview shows a clear pause message instead of accepting messages it cannot save.
 - [Early tester invitation scripts](docs/FIRST_CIRCLE_OUTREACH_KIT_V1.md), [2027 competitor-informed roadmap](docs/MIRRA_2027_PRODUCT_GROWTH_PLAYBOOK.md), [data and privacy contract](docs/MIRRA_DATA_AND_PROGRESS_CONTRACT.md).
 - Human pilot target: **5 actual voluntary testers**, not browser counters, emails sent or AI simulations. The existing recurring Synthetic User Lab tests ten scripted Chromium personas but cannot prove user demand.
 
@@ -34,7 +34,7 @@ Editorial psychology, relationship discovery, and thoughtful self-reflection.
 
 ## Deployment
 
-Use Railway repo source `Noetfield-Systems/MIRRA`, branch `main`. Set `DATABASE_URL` to a dedicated PostgreSQL database or a PostgreSQL reference, ideally with a dedicated user. The server creates only `mirra_*` tables. Set `NODE_ENV=production` to ensure Secure cookies. SSL is provided by the host proxy.
+Current guest preview is on Vercel (GitHub `main` -> Vercel serverless function). No server database is connected on the Vercel preview; personal browser reflections and guest Together links work without it. Do not represent member accounts, signup, backend opt-ins or paid entitlements as operational. For full accounts, supply an appropriate persistent PostgreSQL `DATABASE_URL` and verify schema, migration, live journeys, data protection and payments before inviting account holders. The former Railway deployment is inactive. Do not delete the original Railway volumes until data has been deliberately migrated. The server creates only `mirra_*` tables. Set `NODE_ENV=production` to ensure Secure cookies. SSL is provided by the host proxy.
 
 Variables:
 - `DATABASE_URL` required for cloud accounts, reports, journals, invitations, and entitlements.

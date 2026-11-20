@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /growth.html
-Sitemap: https://mirra-psychology-web-production.up.railway.app/sitemap.xml
+Sitemap: https://mirra-psychology.vercel.app/sitemap.xml

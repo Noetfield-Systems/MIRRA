@@ -58,6 +58,20 @@ jobs:
           exit 1
       - name: Execute ten isolated behavioral QA personas
         run: npm run test:synthetic
+      - name: Verify no-database public experiences on mobile and desktop
+        shell: bash
+        run: |
+          set -euo pipefail
+          (PORT=3011 DATABASE_URL= NODE_ENV=production MIRRA_SYNTHETIC_LAB=1 node server.js > /tmp/mirra-public-preview.log 2>&1 & echo $! > /tmp/mirra-public-preview.pid)
+          trap 'kill "$(cat /tmp/mirra-public-preview.pid)" 2>/dev/null || true' EXIT
+          for n in $(seq 1 35); do
+            if curl --fail --silent http://127.0.0.1:3011/api/health -o /tmp/mirra-public-health.json; then
+              node -e 'const h=require("/tmp/mirra-public-health.json");if(h.database)process.exit(1)'
+              break
+            fi
+            sleep 1
+          done
+          MIRRA_PUBLIC_QA_BASE_URL=http://127.0.0.1:3011 node scripts/public-preview-qa.cjs
       - name: Assert synthetic personas did not enter real-user analytics
         if: ${{ always() && steps.local_mirra.outcome == 'success' }}
         env:
