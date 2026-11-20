@@ -139,10 +139,11 @@ function localInviteRead(code){
  return p;
 }
 function localInviteLink(p){return location.origin+'/?invite=local.'+localInviteEncode(p)}
+const localStyleLabels=['Clear conversation','A little space','Everyday warmth','Shared curiosity'];
 function localInviteComparison(a,b){
  const choices=ans=>Array.from({length:4},(_,i)=>ans.filter(x=>x===i+1).length);
  const first=choices(a),second=choices(b);
- return {sharedChoices:a.filter((v,i)=>v===b[i]).length,total:8,first:styleLabels[first.indexOf(Math.max(...first))],second:styleLabels[second.indexOf(Math.max(...second))],patterns:togetherQuestions.map((question,i)=>({question,similar:a[i]===b[i]})),note:'Matching choices are conversation prompts, never a compatibility or safety score. The people with this link can see the included responses.'};
+ return {sharedChoices:a.filter((v,i)=>v===b[i]).length,total:8,first:localStyleLabels[first.indexOf(Math.max(...first))],second:localStyleLabels[second.indexOf(Math.max(...second))],patterns:togetherQuestions.map((question,i)=>({question,similar:a[i]===b[i]})),note:'Matching choices are conversation prompts, never a compatibility or safety score. The people with this link can see the included responses.'};
 }
 function localGuide(message){
  const m=message.toLowerCase();
