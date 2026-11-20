@@ -1,0 +1,23 @@
+name: Cloudflare deployment access probe
+on:
+  push:
+    paths:
+      - '.github/workflows/cloudflare-deployment-access.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cloudflare-access:
+    runs-on: ubuntu-latest
+    env:
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Verify repository has Cloudflare deployment credentials (never disclose values)
+        shell: bash
+        run: |
+          if [[ -n "$CF_TOKEN" && -n "$CF_ACCOUNT" ]]; then
+            echo "CLOUDFLARE_DEPLOYMENT_ACCESS=AVAILABLE"
+          else
+            echo "CLOUDFLARE_DEPLOYMENT_ACCESS=NOT_CONFIGURED"
+          fi
