@@ -212,6 +212,7 @@ completeQuiz=async function(){if(state.guestMode&&state.journey==='together'){tr
  }else{
   await request('/api/together/'+state.inviteCode+'/answer',{method:'POST',json:{name:state.guestName,answers:state.answers}});
   state.guestMode=false;await fetchInvite();route('invite');
+ }
  }catch(e){toast(e.message)}return}return originalComplete()};
 $('#menu-toggle').addEventListener('click',()=>{const nav=$('#mobile-nav');nav.hidden=!nav.hidden;$('#menu-toggle').setAttribute('aria-expanded',String(!nav.hidden))});
 window.addEventListener('keydown',e=>{if(state.route!=='quiz'||/input|textarea/i.test(document.activeElement?.tagName||''))return;const max=state.journey==='ipip50'?5:4;if(/^[1-5]$/.test(e.key)&&Number(e.key)<=max){chooseAnswer(Number(e.key))}else if(e.key==='Enter'&&state.answers[state.idx])action('next')});
