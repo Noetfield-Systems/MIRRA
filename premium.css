@@ -98,3 +98,18 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 @media(max-width:390px){.wordmark{font-size:23px}.bottom-nav button small{font-size:9px}.hero-copy h1{font-size:58px}.hero-art{height:270px;grid-template-rows:158px 106px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* E2E-verified narrow phone: never let a completed two-person report widen the viewport. */
+.comparison-grid>*{min-width:0}
+.comparison-grid strong,.comparison-grid p,.list-row>*{overflow-wrap:anywhere}
+.invite-code{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
+@media(max-width:680px){
+ .comparison-grid{grid-template-columns:minmax(0,1fr);gap:13px}
+ .comparison-grid>div{min-width:0;max-width:100%}
+ .list-row{flex-wrap:wrap;align-items:flex-start;gap:10px}
+ .list-row>span,.list-row>div{min-width:0;max-width:100%}
+ .list-row small{max-width:100%;white-space:normal}
+ .page-body{min-width:0}
+ .group-buttons{flex-wrap:wrap}
+ .group-buttons>.btn{max-width:100%;overflow-wrap:anywhere}
+}
