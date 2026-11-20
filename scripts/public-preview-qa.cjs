@@ -49,7 +49,7 @@ async function main(){
   assert.ok(friend.url().includes('invite=local.'),'Completed comparison needs its own reusable link');
   await checkSize(friend,'completed Together/mobile');
   await guest.close();
-  await page.goto(BASE+'/#mirror',{waitUntil:'domcontentloaded'});
+  await page.goto(BASE+'/?mirra_qa=1#mirror',{waitUntil:'domcontentloaded'});
   await page.locator('#mirror-form').waitFor({timeout:10000});
   await page.locator('#mirror-form [name="message"]').fill('I have a difficult decision about my work.');
   await page.locator('#mirror-form button[type="submit"]').click();
