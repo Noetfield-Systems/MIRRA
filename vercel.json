@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": "{index.html,classic.html,founder.html,growth.html,styles.css,enhancements.css,app.js,enhancements.js,experience-addons.js,experience-curriculum.js,growth-v2.js,ipip-items.json,assets/**,favicon.svg,robots.txt,sitemap.xml}"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.js"
+    }
+  ]
+}
